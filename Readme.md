@@ -157,3 +157,22 @@ Online_Shoppers/
 │   └── online_shoppers.zip
 │       └── online_shopper.csv
 ├── README.md
+
+👥 Integrantes
+
+Milton Cesar Machado Barreto – 89326
+Raúl Andrés Triana Ortega – 895237
+Santiago Molina Maldonado – 903419
+
+👨‍🏫 Docente
+
+Esteban Ernesto Morales Castro
+
+🎓 Información académica
+
+Programa: Ingeniería de Sistemas
+Curso: Minería de Datos – NRC: 60-95400
+Facultad: Ingeniería
+Institución: Corporación Universitaria Minuto de Dios – UNIMINUTO
+Ciudad: Ibagué, Tolima
+Año: 2026
