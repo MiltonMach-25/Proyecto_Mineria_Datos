@@ -1,9 +1,19 @@
-import pandas as pd
-import numpy as np
+from pathlib import Path
 
-# 1. Cargar el dataset principal de navegación desde la web
-url = "https://raw.githubusercontent.com/datasets/online-shoppers-purchasing-intention/main/data/online_shoppers_intention.csv"
-df_navegacion = pd.read_csv(url)
+import numpy as np
+import pandas as pd
+
+# 1. Cargar el dataset principal desde el archivo local del proyecto
+base_dir = Path(__file__).resolve().parent
+archivo_csv = base_dir / "online_shoppers_intention.csv"
+
+if not archivo_csv.exists():
+    raise FileNotFoundError(
+        f"No se encontró el dataset local: {archivo_csv}. "
+        "Verifica que el archivo online_shoppers_intention.csv esté dentro de la carpeta del proyecto."
+    )
+
+df_navegacion = pd.read_csv(archivo_csv)
 
 # Crear un ID único para cada sesión de usuario
 df_navegacion['Session_ID'] = ['SESS_' + str(i).zfill(6) for i in range(1, len(df_navegacion) + 1)]
