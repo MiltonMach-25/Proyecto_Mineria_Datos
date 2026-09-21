@@ -1,5 +1,5 @@
 # PROYECTO DE MINERÍA DE DATOS
-Predicción de intención de compra en una tienda virtual
+Predicción de intención de compra en una tienda virtual - 
 Sesión 4 · Transformación y Reducción de Datos
 
 
