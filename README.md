@@ -62,6 +62,10 @@ ProyectoMineriaDeDatos/
 ├── proyecto.py                          # Exploración inicial del dataset
 ├── online_shoppers_intention.csv        # Base de datos principal
 ├── dataset_limpio_cruce_marketing.csv   # Archivo generado por el proceso de limpieza
+├── sesion4_transformacion_reduccion/    # Transformación, discretización y PCA
+│   ├── transformar_datos_sesion4.py
+│   ├── README.md
+│   └── resultados/                       # Matrices generadas para modelar
 ├── README.md                            # Documentación del proyecto
 └── .git/                                # Git del repositorio
 ```
@@ -113,7 +117,7 @@ Realiza:
 Para ejecutar este proyecto se requiere tener instalado Python y las librerías:
 
 ```bash
-pip install pandas numpy
+pip install pandas numpy scikit-learn
 ```
 
 ---
@@ -134,6 +138,19 @@ python 01_preparacion_y_cruce_de_datos.py
 python proceso_extraccion_limpieza.py
 ```
 
+### Sesión 4: transformación y reducción
+
+Después de generar `dataset_limpio_cruce_marketing.csv`, ejecuta:
+
+```bash
+python sesion4_transformacion_reduccion/transformar_datos_sesion4.py
+```
+
+Esta etapa compara escaladores, aplica one-hot a las variables categóricas,
+discretiza `Gasto_Historico_USD`, separa `Revenue` como objetivo y genera una
+versión reducida con PCA. La documentación detallada está en
+[`sesion4_transformacion_reduccion/README.md`](sesion4_transformacion_reduccion/README.md).
+
 > La ejecución de la versión corregida de `01_preparacion_y_cruce_de_datos.py` usa el archivo local del proyecto para evitar errores por URL no disponible.
 
 ---
@@ -146,7 +163,8 @@ La ejecución correcta del proyecto permite obtener:
 - limpieza de registros duplicados,
 - validación de variables relevantes,
 - unión con información de marketing,
-- archivo final de datos procesados y listos para análisis.
+- archivo final de datos procesados y listos para análisis,
+- matrices de características transformadas y reducidas para las siguientes sesiones.
 
 ---
 

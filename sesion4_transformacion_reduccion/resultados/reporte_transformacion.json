@@ -1,0 +1,37 @@
+{
+  "filas_entrada": 12205,
+  "columnas_entrada": 23,
+  "filas_train": 9764,
+  "filas_test": 2441,
+  "columnas_X_transformada": 41,
+  "columnas_X_pca": 10,
+  "objetivo": "Revenue",
+  "discretizacion": {
+    "variable": "Gasto_Historico_USD",
+    "estrategia": "quantile",
+    "numero_de_bins": 4,
+    "etiquetas": [
+      "Bajo",
+      "Medio-bajo",
+      "Medio-alto",
+      "Alto"
+    ]
+  },
+  "diagnostico_distancias": {
+    "distancia_sin_escalar": 299.21719871298984,
+    "distancia_minmax": 0.9505626182268381
+  },
+  "pca": {
+    "componentes_originales": 15,
+    "componentes_para_80_por_ciento": 8,
+    "componentes_para_90_por_ciento": 10,
+    "varianza_acumulada_conservada": 0.9456063413882192
+  },
+  "decisiones": [
+    "Session_ID se excluye porque identifica la fila y no representa un patrón.",
+    "Revenue se conserva separado en y_revenue.csv para evitar fuga de información.",
+    "Las numéricas se estandarizan con StandardScaler para la matriz de modelado.",
+    "Las categorías nominales se codifican con OneHotEncoder y no con LabelEncoder.",
+    "PCA se ajusta únicamente con train y usa solo variables numéricas estandarizadas."
+  ]
+}
