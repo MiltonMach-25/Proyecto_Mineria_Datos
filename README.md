@@ -1,4 +1,7 @@
-# Avance de Proyecto en Minería de Datos N°1
+# PROYECTO DE MINERÍA DE DATOS
+Predicción de intención de compra en una tienda virtual
+Sesión 4 · Transformación y Reducción de Datos
+
 
 ## Información general
 
