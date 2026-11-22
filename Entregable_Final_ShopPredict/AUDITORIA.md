@@ -57,14 +57,17 @@ Lagrange preliminar:
 
 Predicción aproximada en `x = 20`: 792,7 segundos.
 
+## Estado de la aplicación Replit
+
+- El dashboard lee el CSV incluido en el repositorio mediante un servidor Python local, sin servicios externos ni credenciales.
+- El servidor y las rutas se verifican localmente; no se afirma un despliegue público en Replit hasta publicarlo desde la cuenta correspondiente.
+- Los indicadores se calculan sobre filas sin duplicados exactos; las métricas de modelos provienen del CSV de evidencias.
+
 ## No implementado o pendiente
 
-- Conexión real a Supabase hasta que existan URL y claves.
-- Importación real hasta ejecutar el script con credenciales.
-- Despliegue real en Vercel hasta importar el proyecto y configurar variables.
 - Ejecución final de Naive Bayes y KNN sobre ShopPredict.
 - Ejecución final de K-means y perfiles comerciales sobre ShopPredict.
-- Predicciones y clústeres reales si no están disponibles en tablas de Supabase.
+- Predicciones y clústeres de producción.
 
 ## Datos que no deben presentarse como reales
 
