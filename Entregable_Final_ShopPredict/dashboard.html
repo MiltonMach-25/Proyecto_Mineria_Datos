@@ -11,9 +11,9 @@
 <body>
 <header class="top"><div class="brand"><img src="assets/shopredict-logo.png" alt="ShopPredict"><div><b>ShopPredict</b><span>Intención de Compra</span></div></div><a href="index.html" style="color:#fff;text-decoration:none;font-size:13px">Ver presentación</a></header>
 <main class="wrap">
-<div id="status" class="status">Sin configurar. El dashboard espera conexión con Supabase.</div>
+<div id="status" class="status">Cargando los datos incluidos en el repositorio…</div>
 <div class="grid" style="margin-top:14px">
-<div class="card"><div id="total" class="metric">—</div><div class="label">Sesiones</div></div>
+<div class="card"><div id="total" class="metric">—</div><div class="label">Sesiones sin duplicados</div></div>
 <div class="card"><div id="buy" class="metric">—</div><div class="label">Compras</div></div>
 <div class="card"><div id="rate" class="metric">—</div><div class="label">Conversión</div></div>
 <div class="card"><div id="duration" class="metric">—</div><div class="label">Duración promedio</div></div>
@@ -26,17 +26,17 @@ async function load(){
   const status=document.getElementById('status');
   try{
     const r=await fetch('/api/stats');
-    if(!r.ok) throw new Error('Supabase no configurado o sin datos');
+    if(!r.ok) throw new Error('No fue posible leer los datos del proyecto');
     const d=await r.json();
     document.getElementById('total').textContent=(d.total||0).toLocaleString('es-CO');
     document.getElementById('buy').textContent=(d.purchases||0).toLocaleString('es-CO');
     document.getElementById('rate').textContent=((d.conversion||0)*100).toFixed(2)+' %';
     document.getElementById('duration').textContent=Math.round(d.avg_duration||0).toLocaleString('es-CO')+' s';
     const table=document.getElementById('models');
-    (d.models||[]).forEach(m=>{const tr=document.createElement('tr');tr.innerHTML='<td>'+m.name+'</td><td>'+Number(m.accuracy||0).toFixed(4)+'</td><td>'+Number(m.f1||0).toFixed(4)+'</td>';table.appendChild(tr)});
-    status.textContent='Datos obtenidos desde Supabase.';
+    (d.models||[]).forEach(m=>{const tr=document.createElement('tr');[m.name,Number(m.accuracy).toFixed(4),Number(m.f1).toFixed(4)].forEach(value=>{const td=document.createElement('td');td.textContent=value;tr.appendChild(td)});table.appendChild(tr)});
+    status.textContent='Datos leídos del CSV del repositorio; se excluyeron duplicados exactos.';
     status.className='status ok';
-  }catch(e){status.textContent=e.message+'. Configura SUPABASE_URL y SUPABASE_ANON_KEY en Vercel.';status.className='status error'}
+  }catch(e){status.textContent=e.message;status.className='status error'}
 }
 load();
 </script>
