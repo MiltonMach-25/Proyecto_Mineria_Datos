@@ -1,0 +1,6 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+online_shoppers_intention_uci.csv
+online_shoppers_intention_uci.metadata.json
