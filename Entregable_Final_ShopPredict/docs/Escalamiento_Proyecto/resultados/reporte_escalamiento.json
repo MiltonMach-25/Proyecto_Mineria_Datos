@@ -1,0 +1,66 @@
+{
+  "archivo_entrada": "dataset_limpio_cruce_marketing.csv",
+  "filas_entrada": 12205,
+  "columnas_entrada": 23,
+  "filas_train": 9764,
+  "filas_test": 2441,
+  "columnas_X_modelado": 84,
+  "objetivo_separado": "Revenue",
+  "identificador_excluido_de_X": "Session_ID",
+  "variables_cuantitativas_escaladas": [
+    "Administrative",
+    "Administrative_Duration",
+    "Informational",
+    "Informational_Duration",
+    "ProductRelated",
+    "ProductRelated_Duration",
+    "BounceRates",
+    "ExitRates",
+    "PageValues",
+    "SpecialDay",
+    "Gasto_Historico_USD"
+  ],
+  "variables_categoricas_codificadas_one_hot": [
+    "Month",
+    "OperatingSystems",
+    "Browser",
+    "Region",
+    "TrafficType",
+    "VisitorType",
+    "Canal_Origen",
+    "Nivel_Fidelidad"
+  ],
+  "variables_binarias_conservadas_0_1": [
+    "Weekend",
+    "Cupon_Aplicado"
+  ],
+  "escaladores_comparados": [
+    "minmax",
+    "standard",
+    "robust"
+  ],
+  "distancias_euclidianas": {
+    "sin_escalar": 299.21051453057066,
+    "minmax_escalada": 0.9170982996223804,
+    "standard_escalada": 3.728839522158051,
+    "robust_escalada": 3.2682901186146873
+  },
+  "pca_sobre_standard_scaler": {
+    "variables_entrada": 11,
+    "componentes_para_80_por_ciento": 5,
+    "componentes_para_90_por_ciento": 6,
+    "varianza_conservada": 0.9212685962940597
+  },
+  "semilla": 42,
+  "test_size": 0.2,
+  "ajuste_solo_con_train": true,
+  "decisiones": [
+    "StandardScaler es la opción principal general y la requerida antes de PCA.",
+    "MinMaxScaler lleva las variables cuantitativas al rango [0, 1].",
+    "RobustScaler usa mediana e IQR para reducir la influencia de valores extremos.",
+    "Los códigos de Browser, Region, OperatingSystems y TrafficType son categorías: se codifican, no se escalan como magnitudes.",
+    "Weekend y Cupon_Aplicado ya son binarias y se mantienen 0/1.",
+    "Session_ID es identificador y Revenue es objetivo; ninguno se incorpora a X.",
+    "Los escaladores, el codificador y PCA se ajustan únicamente con train."
+  ]
+}
