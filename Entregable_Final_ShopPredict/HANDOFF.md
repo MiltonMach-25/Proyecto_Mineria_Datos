@@ -11,6 +11,8 @@ Este paquete conserva:
 - Importador reproducible del CSV.
 - Métricas verificadas en SQL.
 - Evidencias originales y logotipo del proyecto.
+- Lámina de sesión 8 ampliada con representaciones visuales de Árbol, Naive Bayes y KNN.
+- Nombre visible simplificado a ShopPredict, sin “AI” en la presentación y el dashboard.
 
 ## Estado no entregado
 

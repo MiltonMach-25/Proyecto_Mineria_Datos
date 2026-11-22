@@ -37,6 +37,11 @@ elementos propios de ShopPredict:
 - Red visual de las variables candidatas para clustering.
 - Flujo gráfico de K-means con cuatro etapas.
 - Separación visual de las variables de entrada y la variable objetivo.
+- Lámina de sesión 8 ampliada con tres diagramas propios: reglas del árbol, combinación
+  probabilística ilustrativa de Naive Bayes y mapa conceptual de vecinos para KNN.
+- No se presentan métricas nuevas de NB o KNN como resultados reales; se indica
+  claramente que deben ejecutarse sobre el mismo holdout.
+- Se retiró “AI” del encabezado visual de la presentación y del dashboard.
 
 No se copiaron fondos, capturas ajenas ni imágenes de League of Legends.
 Las imágenes incorporadas representan diagramas del proyecto, no resultados simulados.
