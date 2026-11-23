@@ -1,6 +1,6 @@
 <div align="center">
 
-# ShopPredict AI
+# ShopPredict · Material académico previo
 ### Análisis de intención de compra en sesiones de comercio electrónico
 
 **Proyecto académico de Minería de Datos**<br>
@@ -8,10 +8,13 @@ Python · Tkinter · scikit-learn · FastAPI
 
 </div>
 
-> ShopPredict AI explora si las características de una sesión de navegación
+> ShopPredict explora si las características de una sesión de navegación
 > permiten estimar si un visitante realizó una compra. Este paquete reúne la
 > aplicación, datos de demostración, evidencias, servicios opcionales y material
 > de presentación para abrirlo y recorrerlo desde VS Code.
+
+> Archivo de referencia de una etapa anterior. La guía operativa vigente está en
+> `../../README.md`; el backend activo está en `../../backend/`.
 
 **Equipo:** Milton Cesar Machado Barreto · Raúl Andrés Triana Ortega · Santiago Molina Maldonado
 
@@ -41,7 +44,7 @@ gráfica para revisar los resultados.
 |---|---|
 | **Aplicación de escritorio** | Carga el CSV, presenta resúmenes y gráficos, evalúa clasificadores y exporta informe y evidencias. |
 | **Modelos** | Compara Árbol de Decisión, Random Forest y Regresión Logística. |
-| **API REST opcional** | Expone metadatos, esquema de entrada y predicción desde un servicio independiente de la GUI. |
+| **API FastAPI** | El backend vigente está en `../../backend/`; esta guía describe el prototipo académico anterior. |
 | **Descarga UCI opcional** | Obtiene otra copia del dataset y metadatos de procedencia; requiere Internet. |
 | **Material de exposición** | Prompt maestro y tres módulos para explicar datos, transformación, aplicación y modelos. |
 
@@ -111,7 +114,7 @@ flowchart TB
     subgraph APP[prototipo_Shoppredict]
         GUI[GUI Tkinter]
         MODEL[Modelos scikit-learn]
-        API[API FastAPI opcional]
+        API[API FastAPI vigente]
         DATA[CSV local]
         GUI --> MODEL
         API --> MODEL
@@ -119,7 +122,7 @@ flowchart TB
         API --> DATA
     end
     U --> GUI
-    U -. opcional .-> API
+    U --> API
     GUI --> OUT[Informes y evidencias]
 ```
 
@@ -131,14 +134,13 @@ Promp_Maestro/
 │   └── eda/                        # Gráficas EDA reproducidas desde el CSV
 ├── prototipo_Shoppredict/          # Aplicación autocontenida para la demo
 │   ├── app_shoppredict_gui.py      # Interfaz gráfica de escritorio
-│   ├── shoppredict_model.py        # Lógica compartida de modelos
-│   ├── api_shoppredict.py          # API REST opcional (FastAPI)
+│   ├── shoppredict_model.py        # Copia histórica para la GUI Tkinter
 │   ├── descargar_dataset_uci.py    # Descarga opcional desde UCI
 │   ├── descargar_dataset_uci.bat
 │   ├── online_shoppers_intention.csv
 │   ├── iniciar_app.bat
-│   ├── iniciar_api.bat
 │   └── requirements.txt
+├── backend/                        # API FastAPI vigente y modelos activos
 ├── reproducir_graficos_eda.py      # Código fuente de las figuras del informe
 ├── Minería De Datos EDA – Proyecto Shoppredict - Actualizado.md
 ├── Minería De Datos EDA – Proyecto Shoppredict - Actualizado.docx
@@ -176,7 +178,7 @@ carpeta `Promp_Maestro` completa desde el Explorador de archivos.
    python .\app_shoppredict_gui.py
    ```
 
-5. Debe abrirse la ventana **ShopPredict AI**. El dataset incluido se carga
+5. Debe abrirse la ventana **ShopPredict**. El dataset incluido se carga
    automáticamente. Para evaluar los modelos, pulsa **“2. Entrenar y evaluar”**.
 
 ### Si abriste la carpeta raíz del repositorio
@@ -206,18 +208,19 @@ mensaje de error no se cierre con la ventana.
   identificar la causa. Ejecutar un `.py` con doble clic puede cerrar la
   consola antes de que alcances a leerlo.
 
-### API REST opcional
+### API FastAPI de la entrega
 
-Abre una segunda terminal en `prototipo_Shoppredict` y ejecuta:
+Ejecuta el script desde esta carpeta de prototipo; el `.bat` inicia el backend
+vigente en `../../backend/`:
 
 ```powershell
 .\iniciar_api.bat
 ```
 
 Consulta la documentación interactiva en
-<http://127.0.0.1:8000/docs>. La API es independiente de la GUI; sus predicciones
-demostrativas no son una evaluación independiente. Para detener el servicio,
-usa `Ctrl+C` en la terminal donde está activo.
+<http://127.0.0.1:8080/docs>. La API y la GUI de escritorio son independientes;
+sus predicciones demostrativas no son una evaluación independiente. Para
+detener el servicio, usa `Ctrl+C` en la terminal donde está activo.
 
 ### Descargar otra copia desde UCI
 

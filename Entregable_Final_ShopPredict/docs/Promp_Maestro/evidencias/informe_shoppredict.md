@@ -1,4 +1,4 @@
-# ShopPredict AI — Informe de ejecución
+# ShopPredict — Informe de ejecución
 
 Fecha: 2026-10-26 00:19 Hora est. Pacífico, Sudamérica
 

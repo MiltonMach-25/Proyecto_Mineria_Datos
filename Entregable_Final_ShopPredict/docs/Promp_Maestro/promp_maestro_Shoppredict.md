@@ -1,6 +1,11 @@
 <div align="center">
 
-# ShopPredict AI
+# ShopPredict
+
+> Guion académico de apoyo. La presentación final vigente está en
+> `../../index.html` y tiene 12 diapositivas; usa ese archivo para el orden y
+> contenido visual. El prompt vigente para generar la interfaz está en
+> `../../PROMPT_MAESTRO_IA_STUDIO.md`.
 ### Del comportamiento de navegación a una decisión informada
 
 **PROMPT MAESTRO · PRESENTACIÓN DEL PROYECTO**
@@ -38,7 +43,7 @@ apoyo; integra sus contenidos en una sola historia, sin repetirlos.
 
 ## 02 · Antes de redactar
 
-1. Revisa el informe actualizado, el `README.md`, las evidencias y el código
+1. Revisa el informe actualizado, la guía operativa de la entrega, las evidencias y el código
    reproducible disponible.
 2. Usa los subprompts de [datos y limpieza](./promp_sub_01_datos_y_limpieza.md),
    [transformación y PCA](./promp_sub_02_transformacion_y_pca.md) y
@@ -78,7 +83,7 @@ apoyo; integra sus contenidos en una sola historia, sin repetirlos.
 
 | # | Diapositiva | Idea que debe quedar |
 |---:|---|---|
-| 1 | **Portada y propósito** | Qué es ShopPredict AI, quiénes lo desarrollaron y qué busca estimar. |
+| 1 | **Portada y propósito** | Qué es ShopPredict, quiénes lo desarrollaron y qué busca estimar. |
 | 2 | **Problema y metodología** | Qué pregunta se aborda y cómo se organiza el análisis con CRISP-DM. |
 | 3 | **Datos y calidad** | Qué representa `Revenue`, de dónde viene el dataset y qué se verificó. |
 | 4 | **Exploración y preparación** | Cómo se explora y organiza la información; identificar los campos sintéticos. |
@@ -170,7 +175,7 @@ Incluye una secuencia breve y verificable desde la carpeta del paquete:
 1. Abrir `Promp_Maestro` y mostrar el README y el informe actualizado.
 2. Abrir `prototipo_Shoppredict` y ejecutar `iniciar_app.bat`.
 3. Si hay tiempo, ejecutar `iniciar_api.bat` en otra terminal y abrir
-   `http://127.0.0.1:8000/docs`.
+   `http://127.0.0.1:8080/docs`.
 4. Presentar `descargar_dataset_uci.bat` como consulta opcional; requiere Internet.
 
 La aplicación, la API, sus dependencias y el CSV local están juntos en

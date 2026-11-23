@@ -2,7 +2,7 @@
 
 # Módulo 03
 ## Aplicación, modelos y evaluación
-### ShopPredict AI · Material de apoyo para la presentación
+### ShopPredict · Material de apoyo para la presentación
 
 </div>
 
@@ -18,7 +18,7 @@
 
 ## Brief de contenido
 
-Actúa como asesor de exposición académica. Revisa `README.md`, el
+Actúa como asesor de exposición académica. Revisa `../../README.md`, el
 [informe EDA actualizado](./Minería%20De%20Datos%20EDA%20%E2%80%93%20Proyecto%20Shoppredict%20-%20Actualizado.md),
 el código de `prototipo_Shoppredict/` y las métricas de `evidencias/`. Si está
 disponible el repositorio completo, consulta
@@ -78,7 +78,7 @@ Entrega:
 | Acción | Inicio | Dirección |
 |---|---|---|
 | Abrir GUI | `prototipo_Shoppredict\iniciar_app.bat` | Aplicación local |
-| Iniciar API (opcional) | `prototipo_Shoppredict\iniciar_api.bat` | `http://127.0.0.1:8000/docs` |
+| Iniciar API | `prototipo_Shoppredict\iniciar_api.bat` | `http://127.0.0.1:8080/docs` |
 | Descargar copia UCI (opcional) | `prototipo_Shoppredict\descargar_dataset_uci.bat` | Requiere Internet |
 
 ## Diapositiva B · Modelos y evaluación
@@ -113,6 +113,6 @@ no como funcionalidad ya implementada.
 ---
 
 **Fuentes del módulo:** código de la GUI y API en `prototipo_Shoppredict/`,
-`README.md`, informe EDA e informes de `evidencias/`. Para el recorrido completo,
+`../../README.md`, informe EDA e informes de `evidencias/`. Para el recorrido completo,
 vuelve al
 [prompt maestro](./promp_maestro_Shoppredict.md).

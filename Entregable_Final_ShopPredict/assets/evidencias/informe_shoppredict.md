@@ -1,4 +1,4 @@
-# ShopPredict AI — Informe de ejecución
+# ShopPredict — Informe de ejecución
 
 Fecha: 2026-10-26 00:19 Hora est. Pacífico, Sudamérica
 
@@ -12,7 +12,7 @@ Pregunta: ¿Podemos predecir si un usuario realizará una compra utilizando los 
 
 - Sesiones: 12,330
 - Variables, incluida Revenue: 18
-- Compras: 1,908 (15.47%)
+- Compras: 1,908 (15.47% sobre las 12,330 filas originales)
 - Sin compra: 10,422
 - Valores faltantes: 0
 - Duplicados exactos: 125

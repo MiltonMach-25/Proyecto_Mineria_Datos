@@ -1,0 +1,9 @@
+.git
+.env
+.env.*
+__pycache__/
+*.py[cod]
+docs/
+tests/
+Promp_Maestro/
+*.zip
