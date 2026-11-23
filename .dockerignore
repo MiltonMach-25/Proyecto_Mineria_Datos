@@ -1,0 +1,6 @@
+node_modules
+dist
+Entregable_Final_ShopPredict/dist
+.playwright-cli
+.env
+*.log

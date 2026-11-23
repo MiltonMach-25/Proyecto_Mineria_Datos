@@ -1,114 +1,440 @@
 <!doctype html>
 <html lang="es">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ShopPredict Dashboard</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ShopPredict · Intención de Compra</title>
 <style>
-:root{--ink:#17213b;--bg:#eef2f8;--paper:#fff;--indigo:#4f46e5;--teal:#0d9488;--rose:#db315c;--line:#dde3ef}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI",Arial,sans-serif}.top{height:74px;display:flex;align-items:center;justify-content:space-between;padding:10px 28px;background:#11182d;color:white}.brand{display:flex;align-items:center;gap:10px}.brand img{height:54px}.brand b{display:block}.brand span{color:#aeb7cf;font-size:12px}.wrap{max-width:1180px;margin:auto;padding:24px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.card{background:white;border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:0 12px 30px rgba(23,33,59,.07)}.metric{font-size:34px;font-weight:900}.label{color:#718096;font-size:12px;font-weight:800;text-transform:uppercase}.wide{grid-column:span 2}.status{margin-top:14px;padding:12px;border-left:4px solid #d97706;border-radius:10px;background:#fff8e8}.ok{border-left-color:var(--teal);background:#ecfdf8}.error{border-left-color:var(--rose);background:#fff0f3}.empty{border-left-color:#667085;background:#f4f6fa}select,button,input{font:inherit}select,input[type=file]{padding:9px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink)}button{padding:9px 14px;border:0;border-radius:8px;background:var(--indigo);color:#fff;font-weight:800;cursor:pointer}button:disabled{opacity:.6;cursor:wait}.filter-row,.distribution-row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}.filter-row label{display:grid;gap:6px;color:#667085;font-size:12px;font-weight:800}.distribution-row{margin:14px 0}.distribution-row>strong{flex:0 0 120px}.distribution-row .bar{flex:1;min-width:120px;height:18px;border-radius:999px;background:#e6eaf2;overflow:hidden}.bar div{height:100%;background:linear-gradient(90deg,var(--indigo),var(--teal))}.distribution-value{flex:0 0 155px;text-align:right;font-size:13px;font-weight:700}table{width:100%;border-collapse:collapse}th,td{padding:8px;border-bottom:1px solid var(--line);text-align:left}th{color:#667085;font-size:12px}@media(max-width:900px){.grid{grid-template-columns:1fr 1fr}.wide{grid-column:span 2}}@media(max-width:600px){.grid{grid-template-columns:1fr}.wide{grid-column:span 1}.top{padding:10px 16px}.distribution-row>strong,.distribution-value{flex-basis:100%;text-align:left}}
+:root{--ink:#0f172a;--muted:#475569;--bg:#f8fafc;--paper:#fff;--line:#e2e8f0;--indigo:#4f46e5;--teal:#0d9488;--amber:#b45309;--red:#b91c1c}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.5}
+.top{background:var(--paper);border-bottom:1px solid var(--line)}
+.top-inner{max-width:1200px;margin:0 auto;padding:12px 20px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);font-weight:700;font-size:16px;white-space:nowrap}
+.brand img{width:32px;height:32px;object-fit:contain}
+.nav{display:flex;flex-wrap:wrap;gap:16px;align-items:center}
+.nav a,.nav button{background:none;border:0;border-bottom:2px solid transparent;padding:6px 2px;font:inherit;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;text-decoration:none;white-space:nowrap}
+.nav button.active{color:var(--indigo);border-bottom-color:var(--indigo)}
+.nav a:hover,.nav button:hover{color:var(--ink)}
+.btn{border:0;border-radius:8px;padding:9px 15px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;background:var(--indigo);color:#fff;white-space:nowrap}
+.btn.secondary{background:#fff;color:var(--ink);border:1px solid #cbd5e1}
+.btn:disabled{opacity:.6;cursor:wait}
+.wrap{max-width:1200px;margin:0 auto;padding:24px 20px}
+.header-meta{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px;border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:20px}
+.header-meta h1{margin:0;font-size:24px;letter-spacing:-0.02em}
+.meta-line{font-size:12px;color:var(--muted);margin-top:4px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:18px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.kpi-label{font-size:12px;font-weight:600;color:var(--muted)}
+.kpi-val{font-family:ui-monospace,SFMono-Regular,monospace;font-variant-numeric:tabular-nums;font-size:28px;font-weight:700;margin:6px 0 2px}
+.kpi-sub{font-size:12px;color:#64748b}
+.filters{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end}
+.field{display:grid;gap:5px;min-width:190px;flex:1}
+.field label{font-size:12px;font-weight:600;color:#334155}
+select,input[type=number],input[type=file]{padding:8px 10px;border:1px solid #cbd5e1;border-radius:8px;font:inherit;font-size:14px;background:#fff;color:var(--ink)}
+.bar-row{margin:14px 0}
+.bar-head{display:flex;justify-content:space-between;font-size:13px;font-weight:600;margin-bottom:6px}
+.track{height:10px;border-radius:999px;background:#e2e8f0;overflow:hidden}
+.fill-buy{height:100%;background:var(--teal)}
+.fill-no{height:100%;background:var(--indigo)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:9px 8px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums}
+th:first-child,td:first-child{text-align:left}
+th{font-size:12px;color:var(--muted)}
+tr.best{background:#f0fdfa}
+.alert{border:1px solid #fecaca;background:#fef2f2;color:#7f1d1d;border-radius:10px;padding:12px 14px;font-size:13px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.note{border:1px solid #fde68a;background:#fffbeb;color:#78350f;border-radius:10px;padding:14px;font-size:13px}
+.ok{border:1px solid #99f6e4;background:#f0fdfa;color:#134e4a;border-radius:10px;padding:14px;font-size:13px}
+.panel{display:none}.panel.active{display:block}
+.form-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.hint{font-size:11px;color:#64748b;font-family:ui-monospace,monospace}
+.footer{margin-top:32px;border-top:1px solid var(--line);background:var(--paper);padding:16px 20px;font-size:12px;color:var(--muted)}
+.footer-inner{max-width:1200px;margin:0 auto;display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px}
+@media(max-width:900px){.grid4{grid-template-columns:1fr 1fr}.grid2,.grid3,.form-grid{grid-template-columns:1fr}}
+@media(max-width:560px){.grid4{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
-<header class="top"><div class="brand"><img src="assets/shopredict-logo.png" alt="ShopPredict"><div><b>ShopPredict</b><span>Intención de Compra</span></div></div><a href="index.html" style="color:#fff;text-decoration:none;font-size:13px">Ver presentación</a></header>
+<header class="top">
+  <div class="top-inner">
+    <a href="/" class="brand">
+      <img src="assets/shopredict-logo.png" alt="Logotipo de ShopPredict">
+      <span>ShopPredict · Intención de Compra</span>
+    </a>
+    <nav class="nav" aria-label="Navegación principal">
+      <button type="button" class="active" data-tab="resumen">Resumen</button>
+      <button type="button" data-tab="prediccion">Predicción</button>
+      <button type="button" data-tab="validar">Validar CSV</button>
+      <button type="button" data-tab="metodologia">Metodología</button>
+      <a href="index.html">Presentación</a>
+    </nav>
+    <button id="refreshBtn" type="button" class="btn">Actualizar datos</button>
+  </div>
+</header>
+
 <main class="wrap">
-<div id="status" class="status" aria-live="polite">Conectando con la API…</div>
-<section class="card filter-row" style="margin-top:14px">
-<label for="monthFilter">Mes<select id="monthFilter"><option value="">Todos los meses</option></select></label>
-<label for="visitorFilter">Tipo de visitante<select id="visitorFilter"><option value="">Todos los tipos</option></select></label>
-<button id="reload" type="button">Actualizar</button>
-</section>
-<div class="grid" style="margin-top:14px">
-<div class="card"><div id="total" class="metric">—</div><div class="label">Sesiones sin duplicados</div></div>
-<div class="card"><div id="buy" class="metric">—</div><div class="label">Compras</div></div>
-<div class="card"><div id="rate" class="metric">—</div><div class="label">Conversión</div></div>
-<div class="card"><div id="duration" class="metric">—</div><div class="label">Duración promedio</div></div>
-<div class="card wide"><h3>Comparación de modelos · holdout global</h3><table id="models"></table></div>
-<div class="card wide"><h3>Distribución de sesiones</h3><div id="distribution" aria-live="polite">Esperando datos…</div></div>
-<section class="card wide"><h3>Validar otro archivo CSV</h3><p>La validación es temporal: no reemplaza ni guarda el dataset del proyecto.</p><div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center"><input id="csvFile" type="file" accept=".csv,text/csv"><button id="validateCsv" type="button">Validar CSV</button></div><div id="validationStatus" class="status" aria-live="polite">Selecciona un archivo CSV para revisar su estructura.</div></section>
-</div>
+  <div id="globalError" class="alert" style="display:none" role="alert">
+    <span id="globalErrorMsg"></span>
+    <button id="retryBtn" type="button" class="btn secondary">Reintentar</button>
+  </div>
+
+  <!-- TAB 1: RESUMEN -->
+  <section id="tab-resumen" class="panel active">
+    <div class="header-meta">
+      <div>
+        <h1>Resumen operativo de sesiones</h1>
+        <div id="metaLine" class="meta-line">Conectando con el backend...</div>
+      </div>
+      <button type="button" class="btn secondary" data-goto="prediccion">Probar predicción individual</button>
+    </div>
+
+    <div class="card" style="margin-bottom:16px">
+      <div class="filters">
+        <div class="field">
+          <label for="monthFilter">Mes de la sesión</label>
+          <select id="monthFilter"><option value="">Todos los meses</option></select>
+        </div>
+        <div class="field">
+          <label for="visitorFilter">Tipo de visitante</label>
+          <select id="visitorFilter"><option value="">Todos los tipos</option></select>
+        </div>
+        <button id="resetFiltersBtn" type="button" class="btn secondary" style="display:none">Limpiar filtros</button>
+      </div>
+      <p id="metricsScope" class="meta-line" style="margin-top:10px">Métricas de modelos: holdout global documentado (80/20, semilla 42); no cambian con los filtros.</p>
+    </div>
+
+    <div class="grid4">
+      <div class="card"><div class="kpi-label">Sesiones sin duplicados</div><div id="kpiTotal" class="kpi-val">—</div><div class="kpi-sub">Registros depurados</div></div>
+      <div class="card"><div class="kpi-label">Sesiones con compra</div><div id="kpiBuy" class="kpi-val" style="color:var(--teal)">—</div><div class="kpi-sub">Revenue = True</div></div>
+      <div class="card"><div class="kpi-label">Tasa de conversión</div><div id="kpiRate" class="kpi-val" style="color:var(--indigo)">—</div><div class="kpi-sub">Proporción de compra</div></div>
+      <div class="card"><div class="kpi-label">Duración promedio</div><div id="kpiDur" class="kpi-val">—</div><div class="kpi-sub">ProductRelated_Duration</div></div>
+    </div>
+
+    <div id="emptyFilterCard" class="card" style="display:none;text-align:center;margin-bottom:18px">
+      <h2 style="margin:0 0 6px;font-size:18px">Sin sesiones para los filtros seleccionados</h2>
+      <p style="margin:0 0 12px;font-size:14px;color:var(--muted)">La combinación actual no tiene registros en el dataset depurado.</p>
+      <button id="emptyResetBtn" type="button" class="btn">Restablecer filtros</button>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h2 style="margin:0 0 4px;font-size:18px">Distribución de sesiones</h2>
+        <p class="meta-line">Desbalance de clases en la selección actual.</p>
+        <div id="distributionBox" style="margin-top:14px">Cargando...</div>
+      </div>
+      <div class="card">
+        <h2 style="margin:0 0 4px;font-size:18px">Comparación de modelos supervisados</h2>
+        <p class="meta-line">Partición estratificada 80/20 (semilla 42: 9.764 entrenamiento / 2.441 prueba). No garantiza desempeño en producción.</p>
+        <div style="overflow-x:auto;margin-top:10px">
+          <table>
+            <thead><tr><th>Modelo</th><th>Accuracy</th><th>Bal. Acc.</th><th>Precision</th><th>Recall</th><th>F1</th><th>ROC-AUC</th></tr></thead>
+            <tbody id="modelsBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 2: PREDICCION -->
+  <section id="tab-prediccion" class="panel">
+    <div class="header-meta">
+      <div>
+        <h1>Predicción individual de intención de compra</h1>
+        <div class="meta-line">Formulario dinámico desde <code>GET /schema</code> ejecutado en el servidor vía <code>POST /predict</code>.</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button id="presetMedian" type="button" class="btn secondary">Perfil mediana</button>
+        <button id="presetBuy" type="button" class="btn secondary">Perfil compra probable</button>
+      </div>
+    </div>
+    <div class="grid2" style="grid-template-columns:2fr 1fr;align-items:start">
+      <form id="predictForm" class="card">
+        <div class="field" style="max-width:300px;margin-bottom:14px">
+          <label for="predModel">Modelo supervisado</label>
+          <select id="predModel"></select>
+        </div>
+        <div id="numericFields" class="form-grid"></div>
+        <div id="categoricalFields" class="form-grid" style="margin-top:14px"></div>
+        <div id="predError" class="alert" style="display:none;margin-top:14px"></div>
+        <div style="margin-top:16px;text-align:right">
+          <button id="submitPredBtn" type="submit" class="btn">Estimar intención de compra</button>
+        </div>
+      </form>
+      <aside class="card" aria-live="polite">
+        <h2 style="margin:0 0 6px;font-size:18px">Resultado de inferencia</h2>
+        <div id="predResult" style="margin-top:12px;color:var(--muted);font-size:14px">
+          Completa los predictores y presiona <strong>Estimar intención de compra</strong>.
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- TAB 3: VALIDAR CSV -->
+  <section id="tab-validar" class="panel">
+    <div class="header-meta">
+      <div>
+        <h1>Validación temporal de archivos CSV</h1>
+        <div class="meta-line">Inspección vía <code>POST /dataset/validate</code> (límite 10 MB). El archivo nunca se guarda ni reemplaza el dataset oficial.</div>
+      </div>
+    </div>
+    <div class="grid2">
+      <form id="csvForm" class="card">
+        <div class="field">
+          <label for="csvFile">Archivo CSV (18 columnas requeridas)</label>
+          <input id="csvFile" type="file" accept=".csv,text/csv">
+        </div>
+        <button id="validateCsvBtn" type="submit" class="btn" style="margin-top:14px">Validar CSV</button>
+      </form>
+      <div class="card" aria-live="polite">
+        <h2 style="margin:0 0 8px;font-size:18px">Informe de validación</h2>
+        <div id="csvResult" style="font-size:14px;color:var(--muted)">Selecciona un archivo CSV para validar su estructura.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 4: METODOLOGIA -->
+  <section id="tab-metodologia" class="panel">
+    <div class="header-meta">
+      <div>
+        <h1>Metodología, evidencias y métodos pendientes</h1>
+        <div class="meta-line">Transparencia entre resultados medidos y marcos conceptuales.</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <a href="docs" target="_blank" rel="noreferrer" class="btn secondary" style="text-decoration:none">Contrato API (/docs)</a>
+        <a href="index.html" class="btn" style="text-decoration:none">Abrir Presentación (17 diapositivas)</a>
+      </div>
+    </div>
+    <div class="note" style="margin-bottom:16px">
+      <strong>Métodos pendientes de evaluación reproducible:</strong> Naive Bayes, KNN y Clustering (K-means / jerárquico) no tienen métricas finales verificadas para ShopPredict. No se reportan porcentajes, centroides, codo ni silueta hasta ejecutar evaluación reproducible.
+    </div>
+    <div class="grid2">
+      <div class="card"><strong>Regresión lineal (ProductRelated vs. Duración)</strong><p class="meta-line">ŷ = -0,857242 + 37,566054x · R² = 0,77093 · RMSE = 844,436 s</p></div>
+      <div class="card"><strong>Interpolación de Lagrange (4 nodos)</strong><p class="meta-line">Polinomio de grado máximo 3 para estimación puntual didáctica (x = 20 → ≈ 792,7 s).</p></div>
+    </div>
+  </section>
 </main>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <span>ShopPredict · Intención de Compra · UNIMINUTO Ingeniería de Sistemas · 2026</span>
+    <span><a href="index.html">Presentación (17 diapositivas)</a> · <a href="docs">Documentación API (/docs)</a></span>
+  </div>
+</footer>
+
 <script>
-const status=document.getElementById('status');
-const monthFilter=document.getElementById('monthFilter');
-const visitorFilter=document.getElementById('visitorFilter');
-function addOptions(select,values){
-  values.forEach(value=>{const option=document.createElement('option');option.value=value;option.textContent=value;select.appendChild(option)});
-}
-async function loadFilters(){
-  const response=await fetch('/schema');
-  if(!response.ok)throw new Error(await errorMessage(response));
-  const schema=await response.json();
-  addOptions(monthFilter,schema.categorical_options.Month||[]);
-  addOptions(visitorFilter,schema.categorical_options.VisitorType||[]);
-}
-function renderModels(models){
-  const table=document.getElementById('models');
-  const header=document.createElement('tr');
-  ['Modelo','Accuracy','F1'].forEach(label=>{const cell=document.createElement('th');cell.textContent=label;header.appendChild(cell)});
-  table.replaceChildren(header);
-  models.forEach(model=>{
-    const row=document.createElement('tr');
-    [model.name,Number(model.accuracy).toFixed(4),Number(model.f1).toFixed(4)].forEach(value=>{const cell=document.createElement('td');cell.textContent=value;row.appendChild(cell)});
-    table.appendChild(row);
+let schemaData = null;
+
+function setTab(tabId) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + tabId)?.classList.add('active');
+  document.querySelectorAll('.nav button[data-tab]').forEach(b => {
+    b.classList.toggle('active', b.dataset.tab === tabId);
   });
 }
-function renderDistribution(total,purchases){
-  const container=document.getElementById('distribution');
-  container.replaceChildren();
-  if(!total){container.textContent='No hay sesiones para los filtros seleccionados.';return}
-  const values=[['Compras',purchases],['Sin compra',total-purchases]];
-  values.forEach(([label,value])=>{
-    const row=document.createElement('div');row.className='distribution-row';
-    const name=document.createElement('strong');name.textContent=label;
-    const track=document.createElement('div');track.className='bar';
-    const fill=document.createElement('div');fill.style.width=`${value/total*100}%`;track.appendChild(fill);
-    const details=document.createElement('span');details.className='distribution-value';details.textContent=`${value.toLocaleString('es-CO')} · ${(value/total*100).toFixed(2)} %`;
-    row.append(name,track,details);container.appendChild(row);
-  });
-}
-async function load(){
-  try{
-    const params=new URLSearchParams();
-    if(monthFilter.value)params.set('month',monthFilter.value);
-    if(visitorFilter.value)params.set('visitor_type',visitorFilter.value);
-    const query=params.toString();
-    const response=await fetch(`/stats${query?`?${query}`:''}`);
-    if(!response.ok)throw new Error(await errorMessage(response));
-    const data=await response.json();
-    document.getElementById('total').textContent=data.total.toLocaleString('es-CO');
-    document.getElementById('buy').textContent=data.purchases.toLocaleString('es-CO');
-    document.getElementById('rate').textContent=data.conversion===null?'—':`${(data.conversion*100).toFixed(2)} %`;
-    document.getElementById('duration').textContent=data.avg_duration===null?'—':`${Math.round(data.avg_duration).toLocaleString('es-CO')} s`;
-    renderModels(data.models);
-    renderDistribution(data.total,data.purchases);
-    status.textContent=data.total?'Datos del CSV del proyecto, sin duplicados exactos. Las métricas de modelos son del holdout global y no cambian con los filtros.':'No hay sesiones para los filtros seleccionados.';
-    status.className=data.total?'status ok':'status empty';
-  }catch(error){status.textContent=error.message;status.className='status error'}
-}
-async function errorMessage(response){
-  let detail='La solicitud no pudo completarse.';
-  try{const body=await response.json();if(body.detail)detail=body.detail}catch{}
-  return detail;
-}
-document.getElementById('validateCsv').addEventListener('click',async()=>{
-  const file=document.getElementById('csvFile').files[0];
-  const output=document.getElementById('validationStatus');
-  if(!file){output.textContent='Selecciona un archivo CSV.';output.className='status error';return}
-  const form=new FormData();form.append('file',file);
-  output.textContent='Validando archivo…';output.className='status';
-  try{
-    const response=await fetch('/dataset/validate',{method:'POST',body:form});
-    if(!response.ok)throw new Error(await errorMessage(response));
-    const result=await response.json();
-    const issues=result.issues.length?` Observaciones: ${result.issues.join('; ')}`:'';
-    output.textContent=`${result.valid?'CSV válido':'CSV con errores'}: ${result.rows.toLocaleString('es-CO')} filas, ${result.columns} columnas y ${result.duplicates.toLocaleString('es-CO')} duplicados exactos.${issues} No se guardó ni se importó el archivo.`;
-    output.className=result.valid?'status ok':'status error';
-  }catch(error){output.textContent=error.message;output.className='status error'}
+
+document.querySelectorAll('.nav button[data-tab], button[data-goto]').forEach(btn => {
+  btn.addEventListener('click', () => setTab(btn.dataset.tab || btn.dataset.goto));
 });
-monthFilter.addEventListener('change',load);
-visitorFilter.addEventListener('change',load);
-document.getElementById('reload').addEventListener('click',load);
-(async()=>{try{await loadFilters();await load()}catch(error){status.textContent=error.message;status.className='status error'}})();
+
+async function errorMsg(res) {
+  let msg = 'Error del servidor (' + res.status + ').';
+  try { const b = await res.json(); if (b.detail) msg = b.detail; } catch {}
+  return msg;
+}
+
+function fmtNum(v) { return v == null ? '—' : Math.round(v).toLocaleString('es-CO'); }
+function fmtPct(v) { return v == null ? '—' : (v * 100).toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' %'; }
+function fmtMetric(v) { return v == null ? '—' : Number(v).toLocaleString('es-CO', { minimumFractionDigits: 4, maximumFractionDigits: 4 }); }
+
+function renderDistribution(total, purchases) {
+  const box = document.getElementById('distributionBox');
+  if (!total) { box.textContent = 'No hay sesiones en el filtro actual.'; return; }
+  const noBuy = total - purchases;
+  box.innerHTML =
+    '<div class="bar-row"><div class="bar-head"><span>Con compra (Revenue = True)</span><span>' + fmtNum(purchases) + ' · ' + fmtPct(purchases / total) + '</span></div><div class="track"><div class="fill-buy" style="width:' + (purchases / total * 100) + '%"></div></div></div>' +
+    '<div class="bar-row"><div class="bar-head"><span>Sin compra (Revenue = False)</span><span>' + fmtNum(noBuy) + ' · ' + fmtPct(noBuy / total) + '</span></div><div class="track"><div class="fill-no" style="width:' + (noBuy / total * 100) + '%"></div></div></div>';
+}
+
+function renderModels(models) {
+  const tbody = document.getElementById('modelsBody');
+  tbody.replaceChildren();
+  models.forEach(m => {
+    const tr = document.createElement('tr');
+    if (m.name === 'Random Forest') tr.className = 'best';
+    const cells = [m.name, fmtMetric(m.accuracy), fmtMetric(m.balanced_accuracy), fmtMetric(m.precision), fmtMetric(m.recall), fmtMetric(m.f1), fmtMetric(m.roc_auc)];
+    cells.forEach((val, idx) => {
+      const td = document.createElement('td');
+      td.textContent = val;
+      if (idx === 0) td.style.fontWeight = '600';
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+}
+
+function buildPredictionForm(schema) {
+  const modelSelect = document.getElementById('predModel');
+  modelSelect.replaceChildren();
+  (schema.models || []).forEach(m => {
+    const o = document.createElement('option'); o.value = m; o.textContent = m;
+    if (m === 'Random Forest') o.selected = true;
+    modelSelect.appendChild(o);
+  });
+
+  const numBox = document.getElementById('numericFields');
+  const catBox = document.getElementById('categoricalFields');
+  numBox.replaceChildren(); catBox.replaceChildren();
+
+  (schema.numeric_features || []).forEach(col => {
+    const wrap = document.createElement('div'); wrap.className = 'field';
+    const label = document.createElement('label'); label.htmlFor = 'f-' + col; label.textContent = col;
+    wrap.appendChild(label);
+    if (col === 'Weekend') {
+      const chk = document.createElement('input'); chk.type = 'checkbox'; chk.id = 'f-' + col; chk.name = col;
+      wrap.appendChild(chk);
+    } else {
+      const r = schema.numeric_ranges[col];
+      const inp = document.createElement('input'); inp.type = 'number'; inp.step = 'any'; inp.id = 'f-' + col; inp.name = col;
+      if (r) { inp.min = r.minimum; inp.max = r.maximum; inp.value = Number(r.median.toFixed(4)); }
+      wrap.appendChild(inp);
+      if (r) {
+        const hint = document.createElement('span'); hint.className = 'hint';
+        hint.textContent = 'Rango: ' + Number(r.minimum.toFixed(2)) + ' a ' + Number(r.maximum.toFixed(2)) + ' · Mediana: ' + Number(r.median.toFixed(3));
+        wrap.appendChild(hint);
+      }
+    }
+    numBox.appendChild(wrap);
+  });
+
+  (schema.categorical_features || []).forEach(col => {
+    const wrap = document.createElement('div'); wrap.className = 'field';
+    const label = document.createElement('label'); label.htmlFor = 'f-' + col; label.textContent = col;
+    const sel = document.createElement('select'); sel.id = 'f-' + col; sel.name = col;
+    (schema.categorical_options[col] || []).forEach(opt => {
+      const o = document.createElement('option'); o.value = opt; o.textContent = opt;
+      if ((col === 'Month' && opt === 'Nov') || (col === 'VisitorType' && opt === 'Returning_Visitor')) o.selected = true;
+      sel.appendChild(o);
+    });
+    wrap.append(label, sel);
+    catBox.appendChild(wrap);
+  });
+}
+
+async function loadStats() {
+  const m = document.getElementById('monthFilter').value;
+  const v = document.getElementById('visitorFilter').value;
+  document.getElementById('resetFiltersBtn').style.display = (m || v) ? 'inline-block' : 'none';
+  const q = new URLSearchParams();
+  if (m) q.set('month', m);
+  if (v) q.set('visitor_type', v);
+  const res = await fetch('/stats' + (q.toString() ? '?' + q.toString() : ''));
+  if (!res.ok) throw new Error(await errorMsg(res));
+  const data = await res.json();
+  document.getElementById('kpiTotal').textContent = fmtNum(data.total);
+  document.getElementById('kpiBuy').textContent = fmtNum(data.purchases);
+  document.getElementById('kpiRate').textContent = fmtPct(data.conversion);
+  document.getElementById('kpiDur').textContent = data.avg_duration == null ? '—' : fmtNum(data.avg_duration) + ' s';
+  document.getElementById('metricsScope').textContent = data.metrics_scope || '';
+  document.getElementById('emptyFilterCard').style.display = data.total === 0 ? 'block' : 'none';
+  renderDistribution(data.total, data.purchases);
+}
+
+async function loadAll() {
+  const errBox = document.getElementById('globalError');
+  errBox.style.display = 'none';
+  try {
+    const [hRes, mRes, sRes, metRes] = await Promise.all([fetch('/health'), fetch('/metadata'), fetch('/schema'), fetch('/metrics')]);
+    for (const r of [hRes, mRes, sRes, metRes]) if (!r.ok) throw new Error(await errorMsg(r));
+    const [health, meta, schema, metrics] = await Promise.all([hRes.json(), mRes.json(), sRes.json(), metRes.json()]);
+    schemaData = schema;
+    document.getElementById('metaLine').textContent = 'Fuente: ' + meta.file + ' · ' + fmtNum(meta.rows_loaded) + ' filas originales / ' + fmtNum(meta.duplicates_removed) + ' duplicados excluidos · Backend conectado (' + health.models_loaded + ' modelos activos)';
+
+    const mf = document.getElementById('monthFilter'), vf = document.getElementById('visitorFilter');
+    if (mf.options.length <= 1) (schema.categorical_options.Month || []).forEach(x => { const o = document.createElement('option'); o.value = x; o.textContent = x; mf.appendChild(o); });
+    if (vf.options.length <= 1) (schema.categorical_options.VisitorType || []).forEach(x => { const o = document.createElement('option'); o.value = x; o.textContent = x; vf.appendChild(o); });
+
+    renderModels(metrics);
+    buildPredictionForm(schema);
+    await loadStats();
+  } catch (err) {
+    const hint = window.location.protocol === 'file:' || err instanceof TypeError
+      ? ' Inicia el servidor en VS Code con "npm run dev" (puerto 3000) o FastAPI (puerto 8000) y abre http://localhost:3000/.'
+      : '';
+    document.getElementById('globalErrorMsg').textContent = (err.message || 'Error de conexión con la API.') + hint;
+    errBox.style.display = 'flex';
+  }
+}
+
+document.getElementById('monthFilter').addEventListener('change', () => loadStats().catch(e => { document.getElementById('globalErrorMsg').textContent = e.message; document.getElementById('globalError').style.display = 'flex'; }));
+document.getElementById('visitorFilter').addEventListener('change', () => loadStats().catch(e => { document.getElementById('globalErrorMsg').textContent = e.message; document.getElementById('globalError').style.display = 'flex'; }));
+document.getElementById('resetFiltersBtn').addEventListener('click', () => { document.getElementById('monthFilter').value = ''; document.getElementById('visitorFilter').value = ''; loadStats(); });
+document.getElementById('emptyResetBtn').addEventListener('click', () => { document.getElementById('monthFilter').value = ''; document.getElementById('visitorFilter').value = ''; loadStats(); });
+document.getElementById('refreshBtn').addEventListener('click', loadAll);
+document.getElementById('retryBtn').addEventListener('click', loadAll);
+
+document.getElementById('presetMedian').addEventListener('click', () => { if (schemaData) buildPredictionForm(schemaData); });
+document.getElementById('presetBuy').addEventListener('click', () => {
+  if (!schemaData) return;
+  buildPredictionForm(schemaData);
+  const overrides = { Administrative: 4, Administrative_Duration: 120, ProductRelated: 35, ProductRelated_Duration: 1650, BounceRates: 0.002, ExitRates: 0.008, PageValues: 55 };
+  Object.entries(overrides).forEach(([k, v]) => { const el = document.getElementById('f-' + k); if (el) el.value = v; });
+});
+
+document.getElementById('predictForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (!schemaData) return;
+  const errEl = document.getElementById('predError');
+  errEl.style.display = 'none';
+  const features = {};
+  (schemaData.numeric_features || []).forEach(col => {
+    const el = document.getElementById('f-' + col);
+    features[col] = col === 'Weekend' ? Boolean(el.checked) : Number(el.value);
+  });
+  (schemaData.categorical_features || []).forEach(col => {
+    features[col] = document.getElementById('f-' + col).value;
+  });
+  try {
+    const res = await fetch('/predict', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: document.getElementById('predModel').value, features })
+    });
+    if (!res.ok) throw new Error(await errorMsg(res));
+    const out = await res.json();
+    document.getElementById('predResult').innerHTML =
+      '<div class="' + (out.revenue ? 'ok' : 'card') + '" style="margin-bottom:12px"><div class="kpi-label">Clase estimada</div><div style="font-size:24px;font-weight:700;margin:4px 0">' + out.label + '</div><div class="meta-line">Modelo: ' + out.model + '</div></div>' +
+      '<div class="bar-head"><span>Probabilidad de compra</span><span>' + fmtPct(out.probability_purchase) + '</span></div>' +
+      '<div class="track" style="margin-bottom:12px"><div class="fill-no" style="width:' + (out.probability_purchase * 100) + '%"></div></div>' +
+      '<div class="note">' + out.note + '</div>';
+  } catch (err) {
+    errEl.textContent = err.message;
+    errEl.style.display = 'block';
+  }
+});
+
+document.getElementById('csvForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const file = document.getElementById('csvFile').files[0];
+  const outEl = document.getElementById('csvResult');
+  if (!file) { outEl.innerHTML = '<div class="alert">Selecciona un archivo CSV primero.</div>'; return; }
+  const form = new FormData(); form.append('file', file);
+  outEl.textContent = 'Validando...';
+  try {
+    const res = await fetch('/dataset/validate', { method: 'POST', body: form });
+    if (!res.ok) throw new Error(await errorMsg(res));
+    const r = await res.json();
+    outEl.innerHTML =
+      '<div class="' + (r.valid ? 'ok' : 'alert') + '" style="margin-bottom:10px"><strong>' + (r.valid ? 'CSV válido' : 'CSV con observaciones') + '</strong> · persisted = ' + r.persisted + ' (no se guardó ni importó).</div>' +
+      '<p>Filas: <strong>' + fmtNum(r.rows) + '</strong> · Columnas: <strong>' + fmtNum(r.columns) + '</strong> · Duplicados exactos: <strong>' + fmtNum(r.duplicates) + '</strong></p>' +
+      (r.issues.length ? '<p style="color:var(--red)">Observaciones: ' + r.issues.join('; ') + '</p>' : '');
+  } catch (err) {
+    outEl.innerHTML = '<div class="alert">' + err.message + '</div>';
+  }
+});
+
+loadAll();
 </script>
 </body>
 </html>

@@ -1,0 +1,29 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Iniciar ShopPredict + Abrir en Edge",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"],
+      "env": {
+        "PORT": "3000"
+      },
+      "serverReadyAction": {
+        "pattern": "listening on http://",
+        "uriFormat": "http://localhost:3000/index.html",
+        "action": "openExternally"
+      }
+    },
+    {
+      "name": "Microsoft Edge · Presentación + Dashboard (localhost:3000)",
+      "type": "msedge",
+      "request": "launch",
+      "url": "http://localhost:3000/index.html",
+      "webRoot": "${workspaceFolder}"
+    }
+  ]
+}

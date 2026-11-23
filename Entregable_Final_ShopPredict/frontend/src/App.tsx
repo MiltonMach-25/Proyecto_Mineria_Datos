@@ -189,7 +189,7 @@ export function App() {
                 href="/index.html"
                 className="cursor-pointer rounded-lg bg-indigo-600 px-4 py-2 text-xs font-semibold text-white transition-all hover:-translate-y-0.5 hover:bg-indigo-700"
               >
-                Ir a Presentación (12 láminas) →
+                Ir a Presentación (17 láminas) →
               </a>
             )}
             <a
@@ -209,7 +209,7 @@ export function App() {
           </span>
           <div className="flex flex-wrap items-center gap-4">
             <a href="/index.html" className="hover:text-slate-900 hover:underline">
-              Presentación (12 diapositivas)
+              Presentación (17 diapositivas)
             </a>
             <a href="/docs" className="hover:text-slate-900 hover:underline">
               Control y Contrato API (/docs)

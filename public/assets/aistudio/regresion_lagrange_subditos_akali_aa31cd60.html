@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Regresión lineal: súbditos eliminados vs tiempo</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<style>
+:root {
+  /* Paleta estricta solicitada */
+  --bg-dark: #1E2336;
+  --accent-lilac: #A78BCA;
+  --accent-terracotta: #B66D46;
+  --highlight-yellow: #F2D582;
+  --surface-brown: #4A3B3A;
+
+  /* Derivados funcionales para jerarquía, contraste y estados UI */
+  --bg-overlay-deep: rgba(30, 35, 54, 0.88);
+  --bg-overlay-mid: rgba(30, 35, 54, 0.82);
+  --card-bg: rgba(74, 59, 58, 0.52);
+  --card-bg-solid: #2C2938;
+  --card-border: rgba(167, 139, 202, 0.24);
+  --card-border-warm: rgba(182, 109, 70, 0.38);
+  --card-border-gold: rgba(242, 213, 130, 0.42);
+
+  /* Tipografía de alto contraste sobre #1E2336 */
+  --text-main: #F3F1F8;
+  --text-muted: #B9B4C9;
+  --text-on-accent: #1E2336;
+
+  /* Estados semánticos integrados a la paleta */
+  --lilac-soft: rgba(167, 139, 202, 0.14);
+  --terracotta-soft: rgba(182, 109, 70, 0.18);
+  --yellow-soft: rgba(242, 213, 130, 0.14);
+  --brown-soft: rgba(74, 59, 58, 0.65);
+
+  --shadow-elevated: 0 18px 42px rgba(13, 16, 28, 0.55);
+  --bg-image: url("img/akali fondo.jpg");
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  background-color: var(--bg-dark);
+  color: var(--text-main);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Capa de fondo global con imagen de Akali + Overlay multicapa (85-88% opacidad efectiva) */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background-image:
+    radial-gradient(circle at 78% 28%, rgba(167, 139, 202, 0.16) 0%, rgba(30, 35, 54, 0.86) 52%, rgba(30, 35, 54, 0.94) 100%),
+    linear-gradient(135deg, rgba(30, 35, 54, 0.90) 0%, rgba(74, 59, 58, 0.82) 55%, rgba(30, 35, 54, 0.92) 100%),
+    var(--bg-image);
+  background-size: cover;
+  background-position: center right;
+  background-repeat: no-repeat;
+  pointer-events: none;
+}
+
+.deck {
+  position: relative;
+  z-index: 1;
+  height: 100vh;
+  width: 100vw;
+}
+
+.slide {
+  position: absolute;
+  inset: 0;
+  padding: clamp(22px, 3.2vw, 48px) clamp(24px, 5vw, 84px) 92px;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(36px);
+  transition: opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1), transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  overflow-y: auto;
+}
+
+.slide.active {
+  opacity: 1;
+  pointer-events: auto;
+  transform: none;
+}
+
+.slide.before {
+  transform: translateX(-36px);
+}
+
+/* Tipografía y Jerarquía */
+.kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: clamp(11px, 0.95vw, 13px);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--highlight-yellow);
+  margin-bottom: 8px;
+}
+
+h1 {
+  font-size: clamp(30px, 4.1vw, 58px);
+  line-height: 1.08;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  color: var(--accent-lilac);
+}
+
+h1 .hero-highlight {
+  color: var(--text-main);
+}
+
+h2 {
+  font-size: clamp(22px, 2.5vw, 38px);
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  color: var(--accent-lilac);
+  margin-bottom: clamp(12px, 1.5vw, 20px);
+}
+
+h3 {
+  font-size: clamp(16px, 1.25vw, 20px);
+  font-weight: 700;
+  color: var(--accent-lilac);
+  margin-bottom: 8px;
+}
+
+p, li {
+  font-size: clamp(14px, 1.15vw, 18px);
+  line-height: 1.55;
+  color: var(--text-main);
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+/* Grids */
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(16px, 2.2vw, 32px);
+  flex: 1;
+  min-height: 0;
+}
+
+.wl { grid-template-columns: 1.15fr 0.85fr; }
+.wr { grid-template-columns: 0.85fr 1.15fr; }
+.g3 { grid-template-columns: repeat(3, 1fr); }
+
+@media (max-width: 900px) {
+  .grid2, .wl, .wr, .g3 { grid-template-columns: 1fr; }
+}
+
+/* Contenedores y Tarjetas (Base Marrón #4A3B3A + Glassmorphism oscuro) */
+.card {
+  background: linear-gradient(155deg, rgba(74, 59, 58, 0.58) 0%, rgba(30, 35, 54, 0.84) 100%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--card-border);
+  border-radius: 18px;
+  padding: clamp(14px, 1.6vw, 24px);
+  box-shadow: var(--shadow-elevated);
+}
+
+.card.indigo {
+  background: linear-gradient(155deg, rgba(167, 139, 202, 0.16) 0%, rgba(30, 35, 54, 0.86) 100%);
+  border-color: rgba(167, 139, 202, 0.36);
+}
+
+.card.teal {
+  background: linear-gradient(155deg, rgba(74, 59, 58, 0.72) 0%, rgba(30, 35, 54, 0.88) 100%);
+  border-color: var(--card-border-warm);
+}
+
+.card.amber {
+  background: linear-gradient(155deg, rgba(242, 213, 130, 0.12) 0%, rgba(74, 59, 58, 0.62) 100%);
+  border-color: var(--card-border-gold);
+}
+
+.card.rose {
+  background: linear-gradient(155deg, rgba(182, 109, 70, 0.22) 0%, rgba(30, 35, 54, 0.88) 100%);
+  border-color: rgba(182, 109, 70, 0.52);
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(12px, 1.3vw, 18px);
+}
+
+.cv {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 290px;
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Pills y Etiquetas */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--lilac-soft);
+  color: var(--accent-lilac);
+  border: 1px solid rgba(167, 139, 202, 0.35);
+}
+
+.pill.warm {
+  background: var(--terracotta-soft);
+  color: #E8A682;
+  border-color: rgba(182, 109, 70, 0.45);
+}
+
+.pill.gold {
+  background: var(--yellow-soft);
+  color: var(--highlight-yellow);
+  border-color: rgba(242, 213, 130, 0.45);
+}
+
+/* Botones Interactivos (Terracota #B66D46) */
+button, .btn {
+  align-self: flex-start;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  border: 1px solid rgba(242, 213, 130, 0.2);
+  border-radius: 12px;
+  padding: 9px 16px;
+  cursor: pointer;
+  background: var(--accent-terracotta);
+  color: #FFFDFB;
+  text-decoration: none;
+  transition: transform 0.18s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 6px 18px rgba(182, 109, 70, 0.28);
+}
+
+button:hover, .btn:hover {
+  background: #C77B52;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 22px rgba(182, 109, 70, 0.42);
+}
+
+button:active, .btn:active {
+  transform: translateY(0);
+}
+
+button.ghost, .btn.ghost {
+  background: rgba(74, 59, 58, 0.55);
+  color: var(--text-main);
+  border: 1.5px solid rgba(182, 109, 70, 0.55);
+  box-shadow: none;
+}
+
+button.ghost:hover, .btn.ghost:hover {
+  background: var(--accent-terracotta);
+  color: #FFFDFB;
+  border-color: var(--accent-terracotta);
+}
+
+/* Fragmentos animados */
+.frag {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.frag.shown {
+  opacity: 1;
+  transform: none;
+}
+
+td.frag, th.frag {
+  transform: none;
+}
+
+/* Tablas de Datos */
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: clamp(12px, 1.02vw, 15px);
+  font-variant-numeric: tabular-nums;
+}
+
+th, td {
+  padding: clamp(5px, 0.45vw, 8px) 10px;
+  text-align: center;
+  border-bottom: 1px solid rgba(167, 139, 202, 0.16);
+}
+
+th {
+  background: rgba(74, 59, 58, 0.92);
+  color: var(--accent-lilac);
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  border-bottom: 2px solid var(--accent-terracotta);
+}
+
+tbody tr:hover td {
+  background: rgba(167, 139, 202, 0.12);
+}
+
+tr.sum td {
+  font-weight: 800;
+  color: var(--highlight-yellow);
+  background: rgba(74, 59, 58, 0.85);
+  border-top: 2px solid var(--highlight-yellow);
+  border-bottom: none;
+}
+
+/* Fórmulas y Código */
+.mb {
+  font-size: clamp(16px, 1.45vw, 23px);
+}
+
+.mono, code {
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--highlight-yellow);
+  background: rgba(30, 35, 54, 0.65);
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 0.9em;
+}
+
+/* Slider Interactivo */
+.slider {
+  display: grid;
+  grid-template-columns: 44px 1fr 68px;
+  align-items: center;
+  gap: 12px;
+  font-weight: 600;
+}
+
+input[type=range] {
+  width: 100%;
+  accent-color: var(--accent-terracotta);
+  cursor: pointer;
+}
+
+.big {
+  font-size: clamp(28px, 2.9vw, 44px);
+  font-weight: 800;
+  color: var(--highlight-yellow);
+}
+
+/* Barra de Navegación Inferior */
+.nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 66px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 clamp(16px, 3vw, 40px);
+  background: rgba(30, 35, 54, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(167, 139, 202, 0.22);
+  z-index: 50;
+}
+
+.nav .t {
+  font-size: 14px;
+  color: var(--text-muted);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 38vw;
+}
+
+.ctrls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+#counter {
+  font-weight: 700;
+  min-width: 64px;
+  text-align: center;
+  color: var(--highlight-yellow);
+  font-variant-numeric: tabular-nums;
+}
+
+#progress {
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--accent-lilac), var(--accent-terracotta), var(--highlight-yellow));
+  z-index: 60;
+  transition: width 0.35s ease;
+}
+
+.dots {
+  display: flex;
+  gap: 6px;
+}
+
+.dots span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(167, 139, 202, 0.3);
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.dots span.on {
+  background: var(--highlight-yellow);
+  width: 24px;
+  border-radius: 6px;
+  box-shadow: 0 0 10px rgba(242, 213, 130, 0.5);
+}
+
+@media (max-width: 800px) {
+  .dots { display: none; }
+}
+
+.hint {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* Portada (Cover) - Permite lucir sutilmente la composición de Akali a la derecha */
+.cover {
+  justify-content: center;
+  background:
+    radial-gradient(950px 550px at 82% 35%, rgba(167, 139, 202, 0.14), transparent 65%),
+    linear-gradient(90deg, rgba(30, 35, 54, 0.88) 0%, rgba(30, 35, 54, 0.68) 55%, rgba(30, 35, 54, 0.45) 100%);
+}
+
+.cover canvas {
+  position: absolute;
+  right: 4vw;
+  bottom: 105px;
+  width: min(40vw, 520px);
+  height: min(30vw, 350px);
+  background: rgba(30, 35, 54, 0.72);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(167, 139, 202, 0.28);
+  border-radius: 18px;
+  padding: 8px;
+  box-shadow: var(--shadow-elevated);
+}
+
+@media (max-width: 900px) {
+  .cover canvas { display: none; }
+}
+
+/* Bloques de comando GeoGebra */
+.cmd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: rgba(30, 35, 54, 0.92);
+  color: var(--text-main);
+  border: 1px solid rgba(167, 139, 202, 0.28);
+  border-radius: 12px;
+  padding: 9px 14px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: clamp(11px, 0.95vw, 13.5px);
+  margin-bottom: 10px;
+  word-break: break-all;
+}
+
+.cmd button {
+  padding: 5px 12px;
+  font-size: 12px;
+  background: var(--accent-terracotta);
+  flex-shrink: 0;
+}
+
+/* Badges numéricos de pasos */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--highlight-yellow);
+  color: var(--bg-dark);
+  font-weight: 800;
+  font-size: 14px;
+  box-shadow: 0 0 12px rgba(242, 213, 130, 0.45);
+}
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 82px;
+  transform: translateX(-50%);
+  background: var(--surface-brown);
+  color: var(--highlight-yellow);
+  border: 1px solid var(--highlight-yellow);
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  opacity: 0;
+  transition: opacity 0.3s;
+  z-index: 70;
+  box-shadow: var(--shadow-elevated);
+}
+
+.toast.on {
+  opacity: 1;
+}
+
+ul.clean {
+  list-style: none;
+}
+
+ul.clean li {
+  padding-left: 26px;
+  position: relative;
+  margin-bottom: 10px;
+}
+
+ul.clean li::before {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 0.58em;
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  transform: rotate(45deg);
+  background: var(--highlight-yellow);
+  box-shadow: 0 0 8px rgba(242, 213, 130, 0.6);
+}
+
+.fb {
+  font-weight: 600;
+  margin-top: 6px;
+}
+
+.ok { color: var(--highlight-yellow); }
+.bad { color: #E8A682; }
+
+/* Capturas de pantalla */
+.shot { margin: 0; }
+.shot-ph {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 220px;
+  border: 2px dashed rgba(167, 139, 202, 0.45);
+  border-radius: 14px;
+  background: rgba(74, 59, 58, 0.45);
+  color: var(--accent-lilac);
+  font-weight: 600;
+  text-align: center;
+  padding: 12px;
+}
+
+.shot-ph small {
+  color: var(--text-muted);
+  font-weight: 400;
+  word-break: break-all;
+}
+
+.shot img {
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid rgba(167, 139, 202, 0.3);
+  box-shadow: var(--shadow-elevated);
+  display: block;
+}
+
+.shot figcaption {
+  margin-top: 8px;
+  font-size: 13.5px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* Destacados clave en amarillo dagger-glow */
+b[data-v], .key-stat {
+  color: var(--highlight-yellow);
+}
+
+/* ===== PARTE 2: Lagrange ===== */
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.bar-row{display:grid;grid-template-columns:34px 1fr 64px;gap:10px;align-items:center;margin-bottom:8px;font-variant-numeric:tabular-nums}
+.bar-track{position:relative;height:16px;background:var(--lilac-soft);border-radius:8px;overflow:hidden}
+.bar-zero{position:absolute;left:50%;top:0;bottom:0;width:2px;background:var(--text-muted)}
+.bar-fill{position:absolute;top:0;bottom:0;border-radius:6px;background:var(--accent-lilac);transition:all .15s}
+.stat{display:flex;justify-content:space-between;gap:12px;padding:5px 0;border-bottom:1px solid var(--card-border);font-size:clamp(13px,1.1vw,17px)}.stat b{font-variant-numeric:tabular-nums}
+</style>
+</head>
+<body>
+<div id="progress"></div>
+<div class="deck">
+
+<section class="slide cover" data-title="Portada" data-draw="cover">
+  <div class="kicker">✦ Métodos Numéricos · Ingeniería de Sistemas</div>
+  <h1>Regresión lineal por mínimos cuadrados:<br><span class="hero-highlight">súbditos eliminados</span> en función del tiempo</h1>
+  <p class="muted" style="margin-top:18px;max-width:620px">Medición propia en una partida de League of Legends de 31 min 38 s, con 15 datos tomados cada 2 min 15 s.</p>
+  <div style="margin-top:26px;display:flex;gap:10px;flex-wrap:wrap">
+    <span class="pill">Deivi Rodriguez</span>
+    <span class="pill">Javier Gomez</span>
+    <span class="pill warm">UNIMINUTO · Ibagué</span>
+    <span class="pill gold">Prof. Juan Carlos González Sánchez</span>
+    <span class="pill">Parte 1: regresión · Parte 2: interpolación de Lagrange</span>
+  </div>
+  <p class="hint" style="margin-top:26px">Usa ← → o la barra espaciadora para avanzar · F para pantalla completa</p>
+  <canvas id="cvCover"></canvas>
+</section>
+
+<section class="slide" data-title="Contexto y objetivo">
+  <div class="kicker">Contexto</div>
+  <h2>¿Qué medimos y para qué?</h2>
+  <div class="grid2">
+    <div class="stack">
+      <div class="card indigo"><h3>El experimento</h3><p>En una partida de LoL contamos los <b class="key-stat">súbditos eliminados</b> (farmeo acumulado) a medida que avanza el reloj de la partida.</p></div>
+      <div class="card frag" data-f="1"><h3>Variables</h3>
+        <ul class="clean"><li>\(x\): <b>tiempo</b> de partida, en minutos (independiente).</li><li>\(y\): <b>súbditos eliminados</b>, acumulados (dependiente).</li></ul></div>
+    </div>
+    <div class="stack">
+      <div class="card teal frag" data-f="2"><h3>Objetivo</h3><p>Encontrar la recta \(\hat y=a_0+a_1x\) que pasa más cerca de los datos, interpretar \(a_0\) y \(a_1\), medir la calidad del ajuste y predecir valores intermedios.</p></div>
+      <div class="card amber frag" data-f="3"><h3>Qué esperamos</h3><p>Que el farmeo crezca de forma casi constante en el tiempo, de modo que una recta describa bien la tendencia.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-title="Metodología de medición">
+  <div class="kicker">Metodología</div>
+  <h2>15 mediciones cada 2 min 15 s</h2>
+  <div class="grid2">
+    <div class="stack">
+      <div class="card"><p>La partida dura <b class="key-stat">31:38</b> (1898 s). Para tener 15 datos que incluyan el inicio se usan <b>14 intervalos</b>.</p>
+        <p class="muted" style="margin-top:8px">1898 ÷ 14 ≈ 135.6 s, redondeado a <b class="key-stat">135 s = 2 min 15 s = 2.25 min</b>.</p></div>
+      <div class="card indigo frag" data-f="1"><p>Tiempos medidos: \(x_k = 2.25\,k\) minutos, con \(k=0,1,\dots,14\). El último punto cae en <b>31:30</b>.</p></div>
+      <div class="card amber frag" data-f="2"><p>Se pausó el video de la partida en cada tiempo y se leyó el contador de súbditos. El valor final a 31:38 (237) se guardó como captura de <b>total</b> y no entra en la regresión.</p></div>
+    </div>
+    <div class="card frag" data-f="1"><h3>Instantes de medición</h3><table id="tblTimes"></table></div>
+  </div>
+</section>
+
+<section class="slide" data-title="Capturas de la medición">
+  <div class="kicker">Evidencia</div>
+  <h2>Momentos de la medición en el juego</h2>
+
+  <div class="grid2 g3" style="flex:0 1 auto; margin-bottom:16px;">
+    <figure class="shot">
+      <img src="img/inicio.png" alt="Súbditos al inicio">
+      <figcaption>Momento inicial (t = 0:00)</figcaption>
+    </figure>
+    <figure class="shot frag" data-f="1">
+      <img src="img/medio.png" alt="Súbditos a mitad">
+      <figcaption>Momento intermedio (t = 15:45)</figcaption>
+    </figure>
+    <figure class="shot frag" data-f="2">
+      <img src="img/final.png" alt="Súbditos al final">
+      <figcaption>Total al final de la partida (t = 31:38)</figcaption>
+    </figure>
+  </div>
+
+  <div class="grid2 g3" style="flex:0 1 auto;">
+    <figure class="shot">
+      <img src="img/inicio-subditos.png" alt="Tabla de súbditos al inicio">
+      <figcaption>Contador inicial (t = 0:00)</figcaption>
+    </figure>
+    <figure class="shot frag" data-f="1">
+      <img src="img/medio-subditos.png" alt="Tabla de súbditos a mitad">
+      <figcaption>Contador intermedio (t = 15:45 - 15:52)</figcaption>
+    </figure>
+    <figure class="shot frag" data-f="2">
+      <img src="img/final-subditos.png" alt="Tabla de súbditos al final">
+      <figcaption>Contador final (t = 30:18 - 31:38)</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="slide" data-title="Datos medidos" data-draw="data">
+  <div class="kicker">Datos</div>
+  <h2>Datos medidos</h2>
+  <div class="grid2 wl">
+    <div class="card" style="overflow:auto"><table id="tblData"></table></div>
+    <div class="stack">
+      <div class="card" style="flex:1"><div class="cv"><canvas id="cvData"></canvas></div></div>
+      <div class="card indigo frag" data-f="1"><p>La nube de puntos sube de forma casi lineal: un modelo recta es razonable.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-title="Paso 1: tabla de sumas">
+  <div class="kicker"><span class="badge">1</span>Paso 1</div>
+  <h2>Construir la tabla de sumas</h2>
+  <div class="grid2 wl">
+    <div class="card" style="overflow:auto"><table id="tblSums"></table></div>
+    <div class="stack">
+      <div class="card frag" data-f="1"><p><b>Columna \(x_i^2\):</b> eleva al cuadrado cada \(x_i\).</p></div>
+      <div class="card frag" data-f="2"><p><b>Columna \(x_iy_i\):</b> multiplica cada par.</p></div>
+      <div class="card amber frag" data-f="3"><p><b>Fila Σ:</b> suma cada columna. Son los únicos números que necesitan las fórmulas.</p></div>
+      <div class="card teal frag" data-f="4"><p>Promedios:</p><div id="mAvg"></div></div>
+      <button class="ghost" onclick="next()">Siguiente paso ▸</button>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-title="Paso 2: pendiente a₁">
+  <div class="kicker"><span class="badge">2</span>Paso 2</div>
+  <h2>Calcular la pendiente \(a_1\)</h2>
+  <div class="grid2 wl">
+    <div class="stack mb">
+      <div class="card">$$a_1=\frac{n\sum x_iy_i-\sum x_i\sum y_i}{n\sum x_i^2-\left(\sum x_i\right)^2}$$</div>
+      <div class="card frag" data-f="1" id="m2a"></div>
+      <div class="card frag" data-f="2" id="m2b"></div>
+      <div class="card amber frag" data-f="3" id="m2c"></div>
+    </div>
+    <div class="stack">
+      <div class="card indigo frag" data-f="4"><h3>Interpretación</h3><p>Cada minuto de partida se eliminan en promedio unos <b data-v="a1s"></b> súbditos.</p></div>
+      <div class="card rose frag" data-f="4"><h3>Error típico</h3><p>Confundir \(\left(\sum x_i\right)^2\) con \(\sum x_i^2\). No son lo mismo.</p></div>
+      <button class="ghost" onclick="next()">Siguiente paso ▸</button>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-title="Paso 3: intercepto a₀">
+  <div class="kicker"><span class="badge">3</span>Paso 3</div>
+  <h2>Calcular el intercepto \(a_0\)</h2>
+  <div class="grid2 wl">
+    <div class="stack mb">
+      <div class="card">$$a_0=\bar y-a_1\,\bar x$$</div>
+      <div class="card frag" data-f="1" id="m3a"></div>
+      <div class="card frag" data-f="2" id="m3b"></div>
+      <div class="card amber frag" data-f="3" id="m3c"></div>
+    </div>
+    <div class="stack">
+      <div class="card indigo frag" data-f="4"><h3>Interpretación</h3><p>Es el valor del modelo en \(x=0\). Sale <b>negativo</b> porque el farmeo real empieza unos minutos después del inicio. No se interpreta como súbditos negativos: solo como el punto donde la recta corta el eje \(y\).</p></div>
+      <div class="card frag" data-f="4"><h3>Propiedad útil</h3><p>La recta siempre pasa por el punto promedio \((\bar x,\bar y)=(15.75,\ 120)\).</p></div>
+      <button class="ghost" onclick="next()">Siguiente paso ▸</button>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-title="Paso 4: modelo" data-draw="model">
+  <div class="kicker"><span class="badge">4</span>Paso 4</div>
+  <h2>El modelo ajustado</h2>
+  <div class="grid2 wr">
+    <div class="stack">
+      <div class="card amber mb" id="mModel"></div>
+      <div class="card frag" data-f="1"><p>Se dibuja la recta sobre los datos.</p></div>
+      <div class="card frag" data-f="2"><p>Se marcan los <b style="color:#E8A682">residuos</b>: unos puntos quedan por encima y otros por debajo.</p></div>
+      <div class="card indigo frag" data-f="3"><p>El punto promedio \((\bar x,\bar y)\) queda exactamente sobre la recta.</p></div>
+      <button class="ghost" onclick="next()">Siguiente paso ▸</button>
+    </div>
+    <div class="card"><div class="cv"><canvas id="cvModel"></canvas></div></div>
+  </div>
+</section>
+
+<section class="slide" data-title="Paso 5: calidad del ajuste">
+  <div class="kicker"><span class="badge">5</span>Paso 5</div>
+  <h2>¿Qué tan bueno es el ajuste?</h2>
+  <div class="grid2">
+    <div class="card" style="overflow:auto"><table id="tblRes"></table></div>
+    <div class="stack">
+      <div class="card frag" data-f="2"><div id="mSt"></div><p class="muted">\(S_t\): variación total · \(S_r\): variación que el modelo no explica.</p></div>
+      <div class="card amber frag" data-f="3"><div id="mR2"></div><p>La recta explica cerca del <b class="key-stat">99 %</b> de la variación de los súbditos.</p></div>
+      <div class="card indigo frag" data-f="4"><div id="mSy"></div><p class="muted">\(S_{y/x}\): dispersión típica de los datos alrededor de la recta.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-title="Paso 6: predicción" data-draw="pred">
+  <div class="kicker"><span class="badge">6</span>Paso 6</div>
+  <h2>Predecir por interpolación</h2>
+  <div class="grid2 wr">
+    <div class="stack">
+      <div class="card indigo"><p>¿Cuántos súbditos llevábamos a los <b class="key-stat">10 minutos</b>, un instante que no medimos?</p><div id="mP10" class="mb"></div></div>
+      <div class="card"><h3>Prueba otros instantes</h3>
+        <div class="slider"><span>\(x\)</span><input type="range" id="sPred" min="0" max="31.5" step="0.25" value="10"><span id="vPred" class="mono">10</span></div>
+        <div class="big" style="margin-top:8px"><span id="predOut"></span> <span style="font-size:.5em" class="muted">súbditos</span></div>
+        <div class="fb ok">✦ Interpolación: dentro del rango medido (0 a 31.5 min)</div></div>
+      <div class="card amber"><p>Interpolar es seguro porque el instante está dentro del rango de los datos. Predecir más allá de 31.5 min sería extrapolar y puede fallar (el farmeo se estanca al final).</p></div>
+    </div>
+    <div class="card"><div class="cv"><canvas id="cvPred"></canvas></div></div>
+  </div>
+</section>
+
+<section class="slide" data-title="Verificación en GeoGebra">
+  <div class="kicker">Herramienta</div>
+  <h2>Verificación en GeoGebra</h2>
+  <div class="grid2 wr" style="grid-template-columns:1.2fr .8fr">
+    <div class="card">
+      <p class="muted" style="margin-bottom:8px">Escribe en la <b>Entrada</b> (Vista Algebraica):</p>
+      <div class="cmd"><span>P={(0,0),(2.25,6),(4.5,14),(6.75,39),(9,56),(11.25,80),(13.5,101),(15.75,120),(18,147),(20.25,169),(22.5,178),(24.75,205),(27,221),(29.25,227),(31.5,237)}</span><button onclick="cp(this)">Copiar</button></div>
+      <div class="cmd frag" data-f="1"><span>f=FitLine(P)</span><button onclick="cp(this)">Copiar</button></div>
+      <div class="cmd frag" data-f="2"><span>r=CorrelationCoefficient(P)</span><button onclick="cp(this)">Copiar</button></div>
+      <div class="cmd frag" data-f="3"><span>R2=RSquare(P,f)</span><button onclick="cp(this)">Copiar</button></div>
+      <div class="cmd frag" data-f="4"><span>Q=(10,f(10))</span><button onclick="cp(this)">Copiar</button></div>
+      <p class="hint">En español: <code>AjusteLineal</code>, <code>CoeficienteCorrelación</code>, <code>RCuadrado</code>.</p>
+    </div>
+    <div class="stack">
+      <div class="card amber frag" data-f="5"><h3>Debe coincidir con</h3><p>\(f(x)\approx 8.3714x-11.85\), \(r\approx 0.9952\), \(R^2\approx 0.9903\), \(Q\approx(10,\ 71.86)\).</p></div>
+      <div class="card frag" data-f="5"><h3>Captura de la verificación</h3>
+        <figure class="shot">
+        <div class="shot-ph" data-shot="geogebra" style="min-height:110px"><span>✦ Captura de GeoGebra</span></div></figure></div>
+      <a class="btn" href="https://www.geogebra.org/classic" target="_blank" rel="noopener">Abrir GeoGebra ↗</a>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-title="Conclusiones">
+  <div class="kicker">Cierre</div>
+  <h2>Conclusiones</h2>
+  <div class="grid2">
+    <div class="card indigo"><ul class="clean">
+      <li>Modelo obtenido: \(\hat y=a_0+a_1x\) con \(a_1\approx\) <b data-v="a1"></b> y \(a_0\approx\) <b data-v="a0"></b>.</li>
+      <li>El farmeo fue de unos <b data-v="a1s"></b> súbditos por minuto en promedio.</li>
+      <li>\(R^2\approx\) <b data-v="r2"></b>: el ajuste lineal es muy bueno.</li>
+      <li>Interpolación: a los 10 min el modelo estima unos <b data-v="p10"></b> súbditos.</li>
+    </ul></div>
+    <div class="stack">
+      <div class="card amber"><h3>Observaciones</h3><ul class="clean">
+        <li>Los residuos forman una ligera "S": ritmo más lento al inicio y estancamiento al final (227, 237, 237).</li>
+        <li>\(a_0\) negativo no tiene sentido físico; refleja que el farmeo empieza unos minutos después del inicio.</li></ul></div>
+      <div class="card teal"><h3>Siguiente paso</h3><p>En la Parte 2 usamos los mismos 15 datos como puntos exactos para interpolar con Lagrange y compararlo con la recta.</p></div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ============ PARTE 2 ============ -->
+<section class="slide cover" data-title="Parte 2: Lagrange" data-draw="cover2">
+  <div class="kicker">✦ Parte 2 · Métodos Numéricos</div>
+  <h1>Interpolación de Lagrange con <span class="hero-highlight">los mismos datos</span></h1>
+  <p class="muted" style="margin-top:18px;max-width:620px">Ahora los súbditos medidos se tratan como puntos exactos: construimos el polinomio que pasa por ellos y lo comparamos con la recta de la Parte 1.</p>
+  <div style="margin-top:26px;display:flex;gap:10px;flex-wrap:wrap"><span class="pill">Deivi Rodriguez</span><span class="pill">Javier Gomez</span><span class="pill gold">15 datos · cada 2:15</span></div>
+  <canvas id="cvCover2"></canvas>
+</section>
+
+<section class="slide" data-title="De la regresión a la interpolación">
+  <div class="kicker">Idea</div>
+  <h2>Pasar cerca o pasar por los puntos</h2>
+  <div class="grid2">
+    <div class="stack">
+      <div class="card"><h3>Regresión (Parte 1)</h3><p>Una sola recta que pasa <b>cerca</b> de los 15 datos y suaviza el ruido.</p></div>
+      <div class="card indigo frag" data-f="1"><h3>Interpolación (Parte 2)</h3><p>Un polinomio que pasa <b>exactamente</b> por los nodos elegidos. Sirve para estimar valores <b>entre</b> ellos.</p></div>
+      <div class="card amber frag" data-f="2"><h3>Teorema</h3><p>Por \(n+1\) puntos con \(x_i\) distintos pasa un <b>único</b> polinomio de grado \(\le n\).</p></div>
+    </div>
+    <div class="stack">
+      <div class="card frag" data-f="3"><h3>Lagrange</h3>
+        $$P_n(x)=\sum_{i=0}^{n}y_i\,L_i(x),\qquad L_i(x)=\prod_{j\ne i}\frac{x-x_j}{x_i-x_j}$$</div>
+      <div class="card teal frag" data-f="4"><p>Cada \(L_i\) vale <b>1</b> en su nodo \(x_i\) y <b>0</b> en los demás nodos. Por eso \(P_n(x_i)=y_i\), y siempre \(\sum L_i(x)=1\).</p></div>
+      <div class="card rose frag" data-f="5"><p><b>Decisión:</b> con 15 puntos saldría un polinomio de grado 14, que oscila demasiado. Usaremos <b>3 nodos</b> y los otros 12 datos servirán para validar.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-title="Enunciado y nodos" data-draw="lgData">
+  <div class="kicker">Ejercicio</div>
+  <h2>Elegir los 3 nodos y qué estimar</h2>
+  <div class="grid2 wl">
+    <div class="stack">
+      <div class="card"><p>Tomamos del experimento el <b>inicio</b>, la <b>mitad</b> y el <b>final</b> (grado \(n=2\)):</p><table id="tblNodes"></table></div>
+      <div class="card indigo frag" data-f="1"><h3>Objetivos</h3><ul class="clean">
+        <li>Construir \(P_2(x)\) con los 3 nodos.</li><li>Estimar los súbditos a los <b>10 min</b>, un instante no medido.</li><li>Validar \(P_2\) con los 12 datos que no usamos.</li></ul></div>
+      <div class="card amber frag" data-f="2"><p>Como el dato medido a los 9.00 min es 56 y a los 11.25 min es 80, una estimación razonable a los 10 min debe quedar <b>entre 56 y 80</b>.</p></div>
+    </div>
+    <div class="card"><div class="cv"><canvas id="cvLgData"></canvas></div></div>
+  </div>
+</section>
+
+<section class="slide" data-title="Paso 1: construir L₀, L₁, L₂">
+  <div class="kicker"><span class="badge">1</span>Paso 1</div>
+  <h2>Construir los polinomios base</h2>
+  <div class="grid2">
+    <div class="stack mb">
+      <div class="card" id="mL0"></div>
+      <div class="card frag" data-f="1" id="mL1"></div>
+      <div class="card frag" data-f="2" id="mL2"></div>
+    </div>
+    <div class="stack">
+      <div class="card indigo frag" data-f="3"><h3>Truco del denominador</h3><p>Es el mismo numerador evaluado en el nodo: \(L_0(x_0)=1\) siempre.</p></div>
+      <div class="card amber frag" data-f="4"><p>Como \(y_0=0\), el término \(y_0L_0(x)\) vale 0 y desaparece del polinomio final.</p></div>
+      <button class="ghost" onclick="next()">Siguiente paso ▸</button>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-title="Paso 2: evaluar en x = 10">
+  <div class="kicker"><span class="badge">2</span>Paso 2</div>
+  <h2>Evaluar en \(x=10\) min</h2>
+  <div class="grid2 wl">
+    <div class="stack"><div class="card"><table id="tblLgEval"></table></div>
+      <div class="card amber frag" data-f="4"><p><b>Verificación:</b> los \(L_i\) suman 1.</p><div id="mLsum"></div></div></div>
+    <div class="stack">
+      <div class="card teal frag mb" data-f="5" id="mP10lg"></div>
+      <div class="card indigo frag" data-f="5"><p>Estimación por interpolación: unos <b data-v="lg10"></b> súbditos a los 10 min. Cae entre 56 y 80 ✔.</p></div>
+      <button class="ghost" onclick="next()">Siguiente paso ▸</button></div>
+  </div>
+</section>
+
+<section class="slide" data-title="Paso 3: el polinomio" data-draw="lgModel">
+  <div class="kicker"><span class="badge">3</span>Paso 3</div>
+  <h2>El polinomio interpolante</h2>
+  <div class="grid2 wr">
+    <div class="stack">
+      <div class="card teal mb" id="mLgPoly"></div>
+      <div class="card frag" data-f="1"><p>La curva pasa <b>exactamente</b> por los 3 nodos. El coeficiente de \(x^2\) es negativo: la curva se aplana al final, como el farmeo real.</p></div>
+      <div class="card frag" data-f="2"><p>Se superpone la <b>recta de regresión</b> de la Parte 1.</p></div>
+      <div class="card amber frag" data-f="3"><p>A los 10 min: Lagrange \(\approx\) <b data-v="lg10"></b>; regresión \(\approx\) <b data-v="p10"></b>.</p></div>
+      <button class="ghost" onclick="next()">Siguiente paso ▸</button>
+    </div>
+    <div class="card"><div class="cv"><canvas id="cvLgModel"></canvas></div></div>
+  </div>
+</section>
+
+<section class="slide" data-title="Paso 4: validación con los otros 12 datos">
+  <div class="kicker"><span class="badge">4</span>Paso 4</div>
+  <h2>¿Qué tan bien predice \(P_2\)?</h2>
+  <div class="grid2 wl">
+    <div class="card" style="overflow:auto"><table id="tblLgVal"></table></div>
+    <div class="stack">
+      <div class="card indigo frag" data-f="1"><h3>Error en los 12 datos no usados</h3><div id="valStats"></div></div>
+      <div class="card amber frag" data-f="2"><p>\(P_2\) pasa por 3 puntos y la recta usa los 15, así que la recta suele acertar mejor <b>dentro</b> de los datos. La interpolación es exacta solo en los nodos.</p></div>
+      <div class="card rose frag" data-f="3"><p>El error sale <b>positivo</b> (el dato real es mayor) en la segunda mitad y <b>negativo</b> al inicio: la curva real tiene forma de "S", y una parábola de 3 nodos no la copia.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-title="Paso 5: explorar el modelo" data-draw="lgExp">
+  <div class="kicker"><span class="badge">5</span>Paso 5</div>
+  <h2>Explora: ¿cuánto pesa cada nodo?</h2>
+  <div class="grid2 wr">
+    <div class="stack">
+      <div class="card">
+        <div class="slider"><span>\(x\)</span><input type="range" id="sLg" min="0" max="40" step="0.25" value="10"><span id="vLg" class="mono">10</span></div>
+        <div class="big" style="margin-top:8px"><span id="lgOut"></span> <span style="font-size:.5em" class="muted">súbditos (Lagrange)</span></div>
+        <div class="muted">Recta de regresión: <b id="lgReg"></b></div>
+        <div id="lgWarn" class="fb"></div></div>
+      <div class="card"><h3>Pesos \(L_i(x)\)</h3><div id="lgBars"></div>
+        <p class="hint">En un nodo (0, 15.75 o 31.5) su peso vale 1 y los demás 0.</p></div>
+    </div>
+    <div class="card"><div class="cv"><canvas id="cvLgExp"></canvas></div></div>
+  </div>
+</section>
+
+<section class="slide" data-title="Cuidado: más nodos y fenómeno de Runge" data-draw="lgRunge">
+  <div class="kicker">Limitaciones</div>
+  <h2>¿Más nodos es mejor? Probemos con tus datos</h2>
+  <div class="grid2 wr">
+    <div class="stack">
+      <div class="card"><div class="row"><button class="ghost" onclick="rg(3)">3 nodos</button><button class="ghost" onclick="rg(8)">8 nodos</button><button class="ghost" onclick="rg(15)">15 nodos</button></div>
+        <div id="rgStats" style="margin-top:10px"></div></div>
+      <div class="card rose"><p>Con muchos nodos equiespaciados el polinomio pasa por todos los datos, pero <b>oscila cerca de los extremos</b>. Aquí llega a valores imposibles: más súbditos que el total de la partida (237).</p></div>
+      <div class="card teal"><p>En la práctica se usan grados bajos, polinomios por tramos (splines) o la regresión cuando los datos traen ruido.</p></div>
+    </div>
+    <div class="card"><div class="cv"><canvas id="cvLgRunge"></canvas></div></div>
+  </div>
+</section>
+
+<section class="slide" data-title="Verificación en GeoGebra (Lagrange)">
+  <div class="kicker">Herramienta</div>
+  <h2>Verificación en GeoGebra</h2>
+  <div class="grid2 wr" style="grid-template-columns:1.2fr .8fr">
+    <div class="card">
+      <p class="muted" style="margin-bottom:8px">Escribe en la <b>Entrada</b>:</p>
+      <div class="cmd"><span>N={(0,0),(15.75,120),(31.5,237)}</span><button onclick="cp(this)">Copiar</button></div>
+      <div class="cmd frag" data-f="1"><span>L0(x)=(x-15.75)(x-31.5)/((0-15.75)(0-31.5))</span><button onclick="cp(this)">Copiar</button></div>
+      <div class="cmd frag" data-f="1"><span>L1(x)=(x-0)(x-31.5)/((15.75-0)(15.75-31.5))</span><button onclick="cp(this)">Copiar</button></div>
+      <div class="cmd frag" data-f="1"><span>L2(x)=(x-0)(x-15.75)/((31.5-0)(31.5-15.75))</span><button onclick="cp(this)">Copiar</button></div>
+      <div class="cmd frag" data-f="2"><span>p(x)=0 L0(x)+120 L1(x)+237 L2(x)</span><button onclick="cp(this)">Copiar</button></div>
+      <div class="cmd frag" data-f="3"><span>q=Polinomio(N)</span><button onclick="cp(this)">Copiar</button></div>
+      <div class="cmd frag" data-f="4"><span>A=(10,p(10))</span><button onclick="cp(this)">Copiar</button></div>
+      <p class="hint"><code>Polinomio(N)</code> (en inglés <code>Polynomial(N)</code>) da el interpolante directo. Si \(p\) y \(q\) coinciden, el cálculo manual está bien.</p>
+    </div>
+    <div class="stack">
+      <div class="card teal frag" data-f="5"><h3>Debe coincidir con</h3><p>\(p(x)\approx -0.006047x^2+7.7143x\) y \(A\approx(10,\ 76.54)\).</p></div>
+      <div class="card frag" data-f="5"><h3>Captura de la verificación</h3>
+        <figure class="shot"><!-- Reemplaza por: <img src="img/geogebra-lagrange.png" alt="GeoGebra Lagrange"> -->
+        <div class="shot-ph" data-shot="geogebra-lagrange" style="min-height:120px"><span>📷 Captura de GeoGebra (Lagrange)</span></div></figure></div>
+      <a class="btn ghost" href="https://www.geogebra.org/classic" target="_blank" rel="noopener">Abrir GeoGebra ↗</a>
+    </div>
+  </div>
+</section>
+
+<section class="slide" data-title="Conclusiones de la Parte 2">
+  <div class="kicker">Cierre</div>
+  <h2>Regresión vs interpolación</h2>
+  <div class="grid2">
+    <div class="card" style="overflow:auto"><table id="tblCmp"></table></div>
+    <div class="stack">
+      <div class="card indigo"><ul class="clean">
+        <li>\(P_2\) pasa exacto por los 3 nodos y estima <b data-v="lg10"></b> súbditos a los 10 min; la recta estima <b data-v="p10"></b>. Ambas caen entre 56 y 80.</li>
+        <li>Con 15 nodos el polinomio de grado 14 es exacto en los datos pero oscila y produce valores imposibles.</li></ul></div>
+      <div class="card amber"><h3>Qué método usar</h3><p>Para <b>describir la tendencia</b> con datos medidos y algo ruidosos, la regresión. Para <b>estimar entre pocos datos exactos</b>, Lagrange de grado bajo.</p></div>
+      <div class="card teal"><h3>Siguiente paso</h3><p>Diferencias divididas de Newton: el mismo polinomio, pero se puede agregar un nodo sin recalcular todo.</p></div>
+    </div>
+  </div>
+</section>
+
+</div>
+<nav class="nav">
+  <div class="t" id="navTitle"></div><div class="dots" id="dots"></div>
+  <div class="ctrls"><button class="ghost" onclick="prev()">◂</button><span id="counter"></span><button onclick="next()">▸</button><button class="ghost" onclick="toggleFS()" title="Pantalla completa">⛶</button></div>
+</nav>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===== DATOS ===== */
+const X=[...Array(15)].map((_,k)=>2.25*k),Y=[0,6,14,39,56,80,101,120,147,169,178,205,221,227,237];
+const mmss=k=>{const t=135*k;return Math.floor(t/60)+':'+String(t%60).padStart(2,'0')};
+function fitLine(x,y){const n=x.length;let sx=0,sy=0,sxx=0,sxy=0;
+  for(let i=0;i<n;i++){sx+=x[i];sy+=y[i];sxx+=x[i]*x[i];sxy+=x[i]*y[i];}
+  const a1=(n*sxy-sx*sy)/(n*sxx-sx*sx),a0=sy/n-a1*sx/n,ym=sy/n;let st=0,sr=0;
+  for(let i=0;i<n;i++){st+=(y[i]-ym)**2;sr+=(y[i]-a0-a1*x[i])**2;}
+  return{n,sx,sy,sxx,sxy,a0,a1,st,sr,r2:(st-sr)/st,xm:sx/n,ym};}
+const F=fitLine(X,Y),f=(v,d=2)=>Number(v).toFixed(d);
+const sy_x=Math.sqrt(F.sr/(F.n-2));
+
+/* Valores en texto */
+const V={a1:f(F.a1,4),a1s:f(F.a1,1),a0:f(F.a0,2),r2:f(F.r2,4),p10:Math.round(F.a0+F.a1*10)};
+document.querySelectorAll('[data-v]').forEach(e=>e.textContent=V[e.dataset.v]);
+
+/* Fórmulas con números propios */
+const M=(id,t)=>document.getElementById(id).innerHTML='$$'+t+'$$';
+const num=F.n*F.sxy-F.sx*F.sy,den=F.n*F.sxx-F.sx**2;
+M('mAvg',`\\bar x=\\frac{${f(F.sx)}}{15}=${f(F.xm)}\\qquad \\bar y=\\frac{${f(F.sy)}}{15}=${f(F.ym,0)}`);
+M('m2a',`a_1=\\frac{15(${f(F.sxy,1)})-(${f(F.sx)})(${f(F.sy)})}{15(${f(F.sxx,4)})-(${f(F.sx)})^2}`);
+M('m2b',`a_1=\\frac{${f(F.n*F.sxy,1)}-${f(F.sx*F.sy,1)}}{${f(F.n*F.sxx,4)}-${f(F.sx**2,4)}}=\\frac{${f(num,1)}}{${f(den,4)}}`);
+M('m2c',`\\boxed{a_1\\approx ${f(F.a1,4)}\\ \\text{súbditos por minuto}}`);
+M('m3a',`a_0=${f(F.ym,0)}-(${f(F.a1,4)})(${f(F.xm)})`);
+M('m3b',`a_0=${f(F.ym,0)}-${f(F.a1*F.xm,2)}`);
+M('m3c',`\\boxed{a_0\\approx ${f(F.a0,2)}\\ \\text{súbditos}}`);
+M('mModel',`\\hat y=${f(F.a0,2)}+${f(F.a1,4)}\\,x`);
+M('mSt',`S_t=\\sum(y_i-\\bar y)^2\\approx ${f(F.st)}\\qquad S_r=\\sum e_i^2\\approx ${f(F.sr)}`);
+M('mR2',`R^2=\\frac{S_t-S_r}{S_t}\\approx \\mathbf{${f(F.r2,4)}}`);
+M('mSy',`r=\\sqrt{R^2}\\approx ${f(Math.sqrt(F.r2),4)}\\qquad S_{y/x}=\\sqrt{\\frac{S_r}{n-2}}\\approx ${f(sy_x)}`);
+M('mP10',`\\hat y(10)=${f(F.a0,2)}+${f(F.a1,4)}(10)\\approx \\mathbf{${f(F.a0+F.a1*10)}}`);
+
+/* ===== TABLAS ===== */
+function tables(){
+  let t='<thead><tr><th>k</th><th>Tiempo</th><th>x (min)</th></tr></thead><tbody>';
+  X.forEach((x,k)=>t+=`<tr><td>${k}</td><td>${mmss(k)}</td><td>${f(x)}</td></tr>`);
+  document.getElementById('tblTimes').innerHTML=t+'</tbody>';
+  t='<thead><tr><th>k</th><th>Tiempo</th><th>x (min)</th><th>y (súbditos)</th></tr></thead><tbody>';
+  X.forEach((x,k)=>t+=`<tr><td>${k}</td><td>${mmss(k)}</td><td>${f(x)}</td><td>${Y[k]}</td></tr>`);
+  document.getElementById('tblData').innerHTML=t+'</tbody>';
+  t='<thead><tr><th>i</th><th>x<sub>i</sub></th><th>y<sub>i</sub></th><th class="frag" data-f="1">x<sub>i</sub>²</th><th class="frag" data-f="2">x<sub>i</sub>y<sub>i</sub></th></tr></thead><tbody>';
+  X.forEach((x,i)=>t+=`<tr><td>${i+1}</td><td>${f(x)}</td><td>${Y[i]}</td><td class="frag" data-f="1">${f(x*x,4)}</td><td class="frag" data-f="2">${f(x*Y[i])}</td></tr>`);
+  t+=`<tr class="sum"><td class="frag" data-f="3">Σ</td><td class="frag" data-f="3">${f(F.sx)}</td><td class="frag" data-f="3">${F.sy}</td><td class="frag" data-f="3">${f(F.sxx,4)}</td><td class="frag" data-f="3">${f(F.sxy)}</td></tr></tbody>`;
+  document.getElementById('tblSums').innerHTML=t;
+  t='<thead><tr><th>x<sub>i</sub></th><th>y<sub>i</sub></th><th class="frag" data-f="1">ŷ<sub>i</sub></th><th class="frag" data-f="1">e<sub>i</sub></th><th class="frag" data-f="1">e<sub>i</sub>²</th><th class="frag" data-f="2">(y<sub>i</sub>−ȳ)²</th></tr></thead><tbody>';
+  X.forEach((x,i)=>{const yh=F.a0+F.a1*x,e=Y[i]-yh;
+    t+=`<tr><td>${f(x)}</td><td>${Y[i]}</td><td class="frag" data-f="1">${f(yh)}</td><td class="frag" data-f="1" style="color:${e<0?'#E8A682':'var(--highlight-yellow)'}">${f(e)}</td><td class="frag" data-f="1">${f(e*e)}</td><td class="frag" data-f="2">${f((Y[i]-F.ym)**2)}</td></tr>`;});
+  t+=`<tr class="sum"><td>Σ</td><td>${F.sy}</td><td class="frag" data-f="1">${f(F.sy)}</td><td class="frag" data-f="1">≈ 0</td><td class="frag" data-f="2">${f(F.sr)}</td><td class="frag" data-f="2">${f(F.st)}</td></tr></tbody>`;
+  document.getElementById('tblRes').innerHTML=t;
+}
+
+/* ===== GRAFICADOR ADAPTADO A LA PALETA OSCURA ===== */
+const C = {
+  ink: '#F3F1F8',
+  grid: 'rgba(167, 139, 202, 0.14)',
+  axis: '#B9B4C9',
+  pt: '#A78BCA',         /* Lila para los datos observados */
+  line: '#F2D582',       /* Amarillo brillo de daga para la recta de ajuste */
+  res: '#B66D46',        /* Terracota para los residuos */
+  amber: '#F2D582'       /* Amarillo para puntos destacados */
+};
+
+function plot(cv,o){
+  const r=cv.getBoundingClientRect(),d=devicePixelRatio||1;if(r.width<10||r.height<10)return;
+  cv.width=Math.round(r.width*d);cv.height=Math.round(r.height*d);
+  const ctx=cv.getContext('2d');ctx.setTransform(d,0,0,d,0,0);const w=r.width,h=r.height;
+  const m={l:o.ml??58,r:16,t:16,b:o.mb??46},W=w-m.l-m.r,H=h-m.t-m.b;
+  const sx=x=>m.l+(x-o.xmin)/(o.xmax-o.xmin)*W,sy=y=>m.t+H-(y-o.ymin)/(o.ymax-o.ymin)*H;
+  ctx.clearRect(0,0,w,h);ctx.font='12px Inter,sans-serif';ctx.fillStyle=C.axis;ctx.strokeStyle=C.grid;ctx.lineWidth=1;
+  for(let x=Math.ceil(o.xmin/o.xs)*o.xs;x<=o.xmax+1e-9;x+=o.xs){ctx.beginPath();ctx.moveTo(sx(x),m.t);ctx.lineTo(sx(x),m.t+H);ctx.stroke();ctx.textAlign='center';ctx.fillText(+x.toFixed(2),sx(x),m.t+H+16);}
+  for(let y=Math.ceil(o.ymin/o.ys)*o.ys;y<=o.ymax+1e-9;y+=o.ys){ctx.beginPath();ctx.moveTo(m.l,sy(y));ctx.lineTo(m.l+W,sy(y));ctx.stroke();ctx.textAlign='right';ctx.fillText(+y.toFixed(2),m.l-8,sy(y)+4);}
+  ctx.strokeStyle='rgba(167, 139, 202, 0.35)';ctx.lineWidth=1.5;ctx.strokeRect(m.l,m.t,W,H);
+  ctx.fillStyle=C.ink;ctx.font='600 13px Inter,sans-serif';
+  if(o.xl){ctx.textAlign='center';ctx.fillText(o.xl,m.l+W/2,h-8);}
+  if(o.yl){ctx.save();ctx.translate(14,m.t+H/2);ctx.rotate(-Math.PI/2);ctx.textAlign='center';ctx.fillText(o.yl,0,0);ctx.restore();}
+  ctx.save();ctx.beginPath();ctx.rect(m.l,m.t,W,H);ctx.clip();
+  const P=o.pts||[];
+  (o.curves||[]).forEach(c=>{ctx.save();ctx.strokeStyle=c.col;ctx.lineWidth=c.lw||3;ctx.beginPath();for(let k=0;k<=320;k++){const x=o.xmin+(o.xmax-o.xmin)*k/320,y=c.fn(x);k?ctx.lineTo(sx(x),sy(y)):ctx.moveTo(sx(x),sy(y));}ctx.stroke();ctx.restore();});
+  if(o.line){
+    ctx.save();
+    ctx.shadowColor='rgba(242, 213, 130, 0.35)';
+    ctx.shadowBlur=10;
+    ctx.strokeStyle=C.line;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(sx(o.xmin),sy(o.line.a0+o.line.a1*o.xmin));ctx.lineTo(sx(o.xmax),sy(o.line.a0+o.line.a1*o.xmax));ctx.stroke();
+    ctx.restore();
+    if(o.res){ctx.strokeStyle=C.res;ctx.lineWidth=2;ctx.setLineDash([5,4]);P.forEach(([x,y])=>{ctx.beginPath();ctx.moveTo(sx(x),sy(y));ctx.lineTo(sx(x),sy(o.line.a0+o.line.a1*x));ctx.stroke();});ctx.setLineDash([]);}}
+  P.forEach(([x,y])=>{ctx.fillStyle='#1E2336';ctx.strokeStyle=C.pt;ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(sx(x),sy(y),6,0,7);ctx.fill();ctx.stroke();ctx.fillStyle=C.pt;ctx.beginPath();ctx.arc(sx(x),sy(y),3,0,7);ctx.fill();});
+  (o.marks||[]).forEach(k=>{ctx.fillStyle=k.c||C.amber;ctx.beginPath();
+    if(k.dia){ctx.moveTo(sx(k.x),sy(k.y)-9);ctx.lineTo(sx(k.x)+9,sy(k.y));ctx.lineTo(sx(k.x),sy(k.y)+9);ctx.lineTo(sx(k.x)-9,sy(k.y));ctx.closePath();}else ctx.arc(sx(k.x),sy(k.y),8,0,7);
+    ctx.fill();
+    if(k.guide){ctx.strokeStyle=k.c||C.amber;ctx.setLineDash([4,4]);ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(sx(k.x),sy(o.ymin));ctx.lineTo(sx(k.x),sy(k.y));ctx.lineTo(sx(o.xmin),sy(k.y));ctx.stroke();ctx.setLineDash([]);}
+    if(k.label){ctx.font='700 13px Inter';ctx.fillStyle=k.c||C.amber;ctx.textAlign='left';ctx.fillText(k.label,sx(k.x)+14,sy(k.y)+(k.below?26:-10));}});
+  ctx.restore();
+  if(o.text){ctx.font='700 15px Inter';ctx.fillStyle=C.line;ctx.textAlign='left';ctx.fillText(o.text,m.l+12,m.t+24);}
+}
+
+const PTS=X.map((x,i)=>[x,Y[i]]);
+const BASE={xmin:-1,xmax:33,ymin:-20,ymax:260,xs:5,ys:40,xl:'x: tiempo (min)',yl:'y: súbditos eliminados',pts:PTS};
+const MODEL='ŷ = '+f(F.a0,2)+' + '+f(F.a1,4)+'x';
+const DRAW={
+  cover:()=>plot(document.getElementById('cvCover'),{...BASE,line:F,res:true,ml:34,mb:30,xl:'',yl:''}),
+  data:()=>plot(document.getElementById('cvData'),BASE),
+  model:()=>{const o={...BASE},r=rev[cur];if(r>=1){o.line=F;o.text=MODEL;}if(r>=2)o.res=true;
+    if(r>=3)o.marks=[{x:F.xm,y:F.ym,dia:true,below:true,label:'(x̄, ȳ) = (15.75, 120)'}];plot(document.getElementById('cvModel'),o);},
+  pred:()=>{const x=+document.getElementById('sPred').value,y=F.a0+F.a1*x;
+    document.getElementById('vPred').textContent=x;document.getElementById('predOut').textContent=f(y);
+    plot(document.getElementById('cvPred'),{...BASE,line:F,marks:[{x,y,guide:true,below:true,label:'ŷ('+x+') = '+f(y)}]});}
+};
+
+function cp(b){const t=b.previousElementSibling.textContent;(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('Copiado al portapapeles')).catch(()=>toast(t));}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('on'),1800);}
+
+/* ===== PARTE 2: LAGRANGE ===== */
+const lag=(xs,ys,x)=>{let t=0;for(let i=0;i<xs.length;i++){let L=1;for(let j=0;j<xs.length;j++)if(j!==i)L*=(x-xs[j])/(xs[i]-xs[j]);t+=ys[i]*L;}return t;};
+const Lb=(xs,i,x)=>xs.reduce((L,xj,j)=>j===i?L:L*(x-xj)/(xs[i]-xj),1);
+const reg=x=>F.a0+F.a1*x;
+const NI=[0,7,14],NX=NI.map(i=>X[i]),NY=NI.map(i=>Y[i]);
+const dn=NX.map((xi,i)=>NX.reduce((p,xj,j)=>j===i?p:p*(xi-xj),1));
+const oth=i=>NX.filter((_,j)=>j!==i);
+let c2=0,c1=0,c0=0;NY.forEach((y,i)=>{const[a,b]=oth(i);c2+=y/dn[i];c1+=-y*(a+b)/dn[i];c0+=y*a*b/dn[i];});
+const fac=v=>v===0?'x':'(x-'+v+')';
+const lg10=lag(NX,NY,10);
+V.lg10=f(lg10,1);document.querySelectorAll('[data-v="lg10"]').forEach(e=>e.textContent=V.lg10);
+document.querySelectorAll('[data-v="p10"]').forEach(e=>e.textContent=f(reg(10),1));
+[0,1,2].forEach(i=>{const[a,b]=oth(i);
+  M('mL'+i,`L_${i}(x)=\\frac{${fac(a)}${fac(b)}}{(${NX[i]}-${a})(${NX[i]}-${b})}=\\frac{${fac(a)}${fac(b)}}{${f(dn[i],4)}}`);});
+M('mLsum',`${[0,1,2].map(i=>f(Lb(NX,i,10),4)).join('+')}=${f([0,1,2].reduce((t,i)=>t+Lb(NX,i,10),0),4)}`);
+M('mP10lg',`P_2(10)=\\sum y_iL_i(10)=\\mathbf{${f(lg10)}}`);
+M('mLgPoly',`P_2(x)=${f(c2,6)}\\,x^2+${f(c1,4)}\\,x${Math.abs(c0)<1e-9?'':'+'+f(c0,4)}`);
+function lgTables(){
+  let t='<thead><tr><th>i</th><th>x<sub>i</sub> (min)</th><th>Tiempo</th><th>y<sub>i</sub></th></tr></thead><tbody>';
+  NI.forEach((k,i)=>t+=`<tr><td>${i}</td><td>${f(X[k])}</td><td>${mmss(k)}</td><td>${Y[k]}</td></tr>`);
+  document.getElementById('tblNodes').innerHTML=t+'</tbody>';
+  t='<thead><tr><th>i</th><th>y<sub>i</sub></th><th class="frag" data-f="1">L<sub>i</sub>(10)</th><th class="frag" data-f="2">y<sub>i</sub>·L<sub>i</sub>(10)</th></tr></thead><tbody>';
+  let sum=0;NX.forEach((x,i)=>{const L=Lb(NX,i,10);sum+=NY[i]*L;t+=`<tr><td>${i}</td><td>${NY[i]}</td><td class="frag" data-f="1">${f(L,4)}</td><td class="frag" data-f="2">${f(NY[i]*L,3)}</td></tr>`;});
+  t+=`<tr class="sum"><td>Σ</td><td></td><td class="frag" data-f="3">1</td><td class="frag" data-f="3">${f(sum,3)}</td></tr></tbody>`;
+  document.getElementById('tblLgEval').innerHTML=t;
+  t='<thead><tr><th>k</th><th>x (min)</th><th>y real</th><th>P₂(x)</th><th>e = y−P₂</th><th class="frag" data-f="1">e recta</th></tr></thead><tbody>';
+  let s2=0,sr=0,n=0;
+  X.forEach((x,k)=>{const p=lag(NX,NY,x),e=Y[k]-p,er=Y[k]-reg(x),nd=NI.includes(k);
+    if(!nd){s2+=e*e;sr+=er*er;n++;}
+    t+=`<tr${nd?' class="sum"':''}><td>${k}</td><td>${f(x)}</td><td>${Y[k]}</td><td>${f(p)}</td><td style="color:${e<0?'var(--accent-terracotta)':'var(--highlight-yellow)'}">${f(e)}</td><td class="frag" data-f="1">${f(er)}</td></tr>`;});
+  document.getElementById('tblLgVal').innerHTML=t+'</tbody>';
+  const r2=Math.sqrt(s2/n),rr=Math.sqrt(sr/n);
+  document.getElementById('valStats').innerHTML=`<div class="stat"><span>Error cuadrático medio de P₂</span><b>${f(r2)}</b></div><div class="stat"><span>Error cuadrático medio de la recta</span><b>${f(rr)}</b></div><p class="hint" style="margin-top:6px">Filas resaltadas = nodos (error 0). Medido en los 12 datos no usados.</p>`;
+  const p15=lag(X,Y,10);
+  t='<thead><tr><th>Método</th><th>Pasa por los datos</th><th>ŷ(10)</th></tr></thead><tbody>'
+   +`<tr><td>Regresión lineal</td><td>No, cerca de los 15</td><td>${f(reg(10))}</td></tr>`
+   +`<tr><td>Lagrange, 3 nodos</td><td>Solo por 3</td><td>${f(lg10)}</td></tr>`
+   +`<tr><td>Lagrange, 15 nodos</td><td>Por los 15 (con oscilaciones)</td><td>${f(p15)}</td></tr></tbody>`;
+  document.getElementById('tblCmp').innerHTML=t;
+}
+lgTables();
+const CP='#E08A5B',RG={m:3};
+const rgIdx=m=>[...Array(m)].map((_,i)=>Math.round(i*14/(m-1)));
+function rgStats(m){const ix=rgIdx(m),xs=ix.map(i=>X[i]),ys=ix.map(i=>Y[i]);let mn=1e9,mx=-1e9;
+  for(let x=0;x<=31.5;x+=.05){const v=lag(xs,ys,x);mn=Math.min(mn,v);mx=Math.max(mx,v);}
+  let em=0;X.forEach((x,k)=>{if(!ix.includes(k))em=Math.max(em,Math.abs(Y[k]-lag(xs,ys,x)));});
+  return{xs,ys,mn,mx,em,p10:lag(xs,ys,10)};}
+function rg(m){RG.m=m;DRAW.lgRunge();}
+Object.assign(DRAW,{
+  cover2:()=>plot(document.getElementById('cvCover2'),{...BASE,curves:[{fn:x=>lag(NX,NY,x),col:CP}],ml:34,mb:30,xl:'',yl:''}),
+  lgData:()=>plot(document.getElementById('cvLgData'),{...BASE,marks:NX.map((x,i)=>({x,y:NY[i],dia:true}))}),
+  lgModel:()=>{const r=rev[cur],o={...BASE,marks:[]};o.curves=[{fn:x=>lag(NX,NY,x),col:CP}];o.text='P₂(x) pasa por los 3 nodos';
+    if(r>=2)o.line=F;if(r>=3)o.marks=[{x:10,y:lg10,c:CP,guide:true,label:'P₂(10) = '+f(lg10)},{x:10,y:reg(10),c:C.amber,below:true,label:'recta: '+f(reg(10))}];
+    plot(document.getElementById('cvLgModel'),o);},
+  lgExp:()=>{const x=+document.getElementById('sLg').value,y=lag(NX,NY,x),ext=x>31.5;
+    document.getElementById('vLg').textContent=x;document.getElementById('lgOut').textContent=f(y);document.getElementById('lgReg').textContent=f(reg(x));
+    const w=document.getElementById('lgWarn');w.textContent=ext?'⚠ Extrapolación: fuera del rango medido (0 a 31.5 min), poco confiable':'✔ Interpolación: dentro del rango medido';w.className='fb '+(ext?'bad':'ok');
+    document.getElementById('lgBars').innerHTML=NX.map((xi,i)=>{const L=Lb(NX,i,x),wd=Math.min(Math.abs(L)/1.5,1)*50;
+      return`<div class="bar-row"><span class="mono">L${i}</span><div class="bar-track"><div class="bar-zero"></div><div class="bar-fill" style="left:${L>=0?50:50-wd}%;width:${wd}%"></div></div><b>${f(L,3)}</b></div>`;}).join('');
+    plot(document.getElementById('cvLgExp'),{...BASE,xmax:42,ymax:330,ys:50,line:F,curves:[{fn:t=>lag(NX,NY,t),col:CP}],marks:[{x,y,c:CP,guide:true,label:'P₂('+x+') = '+f(y)}]});},
+  lgRunge:()=>{const st=rgStats(RG.m);
+    document.getElementById('rgStats').innerHTML=`<div class="stat"><span>Nodos / grado</span><b>${RG.m} / ${RG.m-1}</b></div><div class="stat"><span>P(10)</span><b>${f(st.p10)}</b></div><div class="stat"><span>Mínimo y máximo de P en [0, 31.5]</span><b>${f(st.mn,0)} / ${f(st.mx,0)}</b></div><div class="stat"><span>Error máx. en datos no usados</span><b>${RG.m===15?'— (todos son nodos)':f(st.em)}</b></div>`;
+    plot(document.getElementById('cvLgRunge'),{...BASE,ymin:-60,ymax:380,ys:60,line:F,curves:[{fn:x=>lag(st.xs,st.ys,x),col:CP}],marks:st.xs.map((x,i)=>({x,y:st.ys[i],dia:true}))});}
+});
+document.getElementById('sLg').addEventListener('input',()=>DRAW.lgExp());
+
+/* ===== NAVEGACION ===== */
+tables();
+const S=[...document.querySelectorAll('.slide')],rev=S.map(()=>0);let cur=0;
+const G=s=>[...new Set([...s.querySelectorAll('[data-f]')].map(e=>+e.dataset.f))].sort((a,b)=>a-b);
+function render(){const d=DRAW[S[cur].dataset.draw];if(d)d();}
+function applyFrags(i){const g=G(S[i]);S[i].querySelectorAll('[data-f]').forEach(e=>e.classList.toggle('shown',g.indexOf(+e.dataset.f)<rev[i]));}
+function goTo(i){if(i<0||i>=S.length)return;cur=i;
+  S.forEach((s,k)=>{s.classList.toggle('active',k===i);s.classList.toggle('before',k<i);});applyFrags(i);
+  document.getElementById('counter').textContent=(i+1)+' / '+S.length;
+  document.getElementById('navTitle').textContent=S[i].dataset.title;
+  document.getElementById('progress').style.width=((i+1)/S.length*100)+'%';
+  document.querySelectorAll('#dots span').forEach((d,k)=>d.classList.toggle('on',k===i));
+  history.replaceState(null,'','#'+(i+1));requestAnimationFrame(()=>requestAnimationFrame(render));}
+function next(){const g=G(S[cur]);if(rev[cur]<g.length){rev[cur]++;applyFrags(cur);render();}else goTo(cur+1);}
+function prev(){if(rev[cur]>0){rev[cur]--;applyFrags(cur);render();}else goTo(cur-1);}
+function toggleFS(){document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen().catch(()=>{});}
+const dots=document.getElementById('dots');
+S.forEach((s,k)=>{const d=document.createElement('span');d.title=s.dataset.title;d.onclick=()=>goTo(k);dots.appendChild(d);});
+document.addEventListener('keydown',e=>{if(['input','textarea'].includes((e.target.tagName||'').toLowerCase()))return;
+  if(['ArrowRight','PageDown',' '].includes(e.key)){e.preventDefault();next();}
+  else if(['ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();prev();}
+  else if(e.key==='Home')goTo(0);else if(e.key==='End')goTo(S.length-1);else if(e.key==='f'||e.key==='F')toggleFS();});
+let tx=null;document.addEventListener('touchstart',e=>{tx=e.touches[0].clientX;},{passive:true});
+document.addEventListener('touchend',e=>{if(tx===null)return;const dx=e.changedTouches[0].clientX-tx;if(!e.target.closest('input,canvas')){if(dx<-60)next();else if(dx>60)prev();}tx=null;});
+document.getElementById('sPred').addEventListener('input',DRAW.pred);
+let rz;addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(render,120);});
+addEventListener('load',()=>{if(window.renderMathInElement)renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false}],throwOnError:false});render();});
+const st=parseInt(location.hash.slice(1));goTo(isNaN(st)?0:Math.min(S.length,Math.max(1,st))-1);
+</script>
+</body>
+</html>

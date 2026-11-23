@@ -1,8 +1,7 @@
 # Guion de Sustentación Final · ShopPredict · Intención de Compra
 
-**Equipo:** Milton Cesar Machado Barreto · Raúl Andrés Triana Ortega · Santiago Molina Maldonado
-
-**Programa:** Ingeniería de Sistemas · UNIMINUTO Ibagué · 2026
+**Equipo:** Milton Cesar Machado Barreto · Raúl Andrés Triana Ortega · Santiago Molina Maldonado  
+**Programa:** Ingeniería de Sistemas · UNIMINUTO Ibagué · 2026  
 **Duración sugerida:** 10–12 minutos (presentación + demostración en vivo) + 3–5 minutos de preguntas del jurado.
 
 ---
@@ -16,8 +15,9 @@
 
 ---
 
-## 2. Datos, limpieza y hallazgos verificados (Diapositivas 1–3 · 2 min)
+## 2. Datos, limpieza y hallazgos verificados (Diapositivas 1–5 · 2 min)
 
+- **Justificación inicial (Diapositiva 2):** Elegimos *ShopPredict* porque el `84,37 %` de sesiones no compra; construimos web + API para probar casos reales y validar CSV sin alterar datos; y usamos **VS Code + Node/Express + Google AI Studio (soporte) + Cloud Run** en lugar de **Vercel** porque así todo corre junto en un único servidor 100 % portable en local sin internet ni separar backend.
 - **Fuente:** *Online Shoppers Purchasing Intention Dataset* (UCI / Kaggle).
 - **Auditoría real de calidad:**
   - `12.330` filas originales, `18` columnas, `0` valores faltantes en el archivo fuente.
@@ -30,7 +30,7 @@
 
 ---
 
-## 3. Metodología, modelado supervisado y transparencia (Diapositivas 4–7 · 2,5 min)
+## 3. Metodología, modelado supervisado y transparencia (Diapositivas 6–10 · 2,5 min)
 
 - **Pipeline sin fuga de datos:** Partición estratificada **80/20** con semilla `42` (`9.764` entrenamiento / `2.441` prueba), `OneHotEncoder` para variables categóricas y `StandardScaler` aplicado únicamente donde corresponde (Regresión Logística).
 - **Resultados verificados en la partición documentada:**
@@ -42,7 +42,7 @@
 
 ---
 
-## 4. Métodos numéricos aplicados (Diapositivas 10–12 · 1,5 min)
+## 4. Métodos numéricos aplicados (Diapositivas 11–17 · 2 min)
 
 Sobre `ProductRelated` ($x$) y `ProductRelated_Duration` ($y$):
 - **Regresión lineal por mínimos cuadrados:** $\hat{y} = -0,857242 + 37,566054x$ ($R^2 = 0,77093$, $\text{RMSE} = 844,436\text{ s}$). Resume la tendencia global en presencia de ruido.
@@ -53,12 +53,7 @@ Sobre `ProductRelated` ($x$) y `ProductRelated_Duration` ($y$):
 
 ## 5. Demostración en vivo de la aplicación (3 min)
 
-Abrir el dashboard en `http://127.0.0.1:8080/` después de compilar el
-frontend y arrancar FastAPI. En desarrollo, Vite está en
-`http://127.0.0.1:5173/` y reenvía las peticiones a la API en el puerto `8080`.
-La presentación está en `http://127.0.0.1:8080/index.html`. En producción,
-utiliza únicamente la URL de Cloud Run después de comprobarla; el despliegue
-público aún está pendiente de autorización y validación.
+Abrir principalmente desde **Visual Studio Code** o la carpeta del trabajo (`http://localhost:3000`, o `index.html` directo; como opción alternativa en línea está disponible el acceso web del entorno de desarrollo `https://ais-dev-qoly54eogadnudoldqzznt-513240885441.us-west1.run.app` o tu enlace de Cloud Run):
 
 1. **Pestaña `Resumen`:**
    - Mostrar la barra de estado conectada al backend (`/health` + `12.330` filas / `125` duplicados).
@@ -75,15 +70,15 @@ público aún está pendiente de autorización y validación.
 
 ## 6. Respuestas preparadas para preguntas difíciles del jurado
 
-- **¿Por qué elegir F1 y Balanced Accuracy en lugar de solo Accuracy?**
-
+- **¿Por qué elegir F1 y Balanced Accuracy en lugar de solo Accuracy?**  
   Porque solo el `15,63 %` de las sesiones depuradas son compras; un modelo trivial que predijera siempre "Sin compra" tendría `84,37 %` de Accuracy pero `0 %` de utilidad para detectar compradores.
-- **¿Por qué Random Forest no se declara "el mejor para siempre"?**
-
+- **¿Por qué Random Forest no se declara "el mejor para siempre"?**  
   Porque el F1 de `0,6348` corresponde a una única partición holdout 80/20 (semilla 42). En producción requeriría validación cruzada temporal, monitoreo de *data drift* y ajuste de umbral según costo de falso negativo vs. falso positivo.
-- **¿Qué pasa si un usuario sube un CSV mal formado o con datos distintos?**
-
+- **¿Qué pasa si un usuario sube un CSV mal formado o con datos distintos?**  
   El endpoint `/dataset/validate` verifica columnas esperadas, tipos numéricos finitos, valores válidos en `Weekend` y `Revenue`, tamaño máximo de `10 MB`, y devuelve observaciones detalladas sin persistir el archivo (`persisted: false`).
-- **¿Por qué separar el frontend de la lógica del modelo?**
-
+- **¿Por qué separar el frontend de la lógica del modelo?**  
   Por arquitectura empresarial: el navegador nunca reimplementa pesos ni reglas de decisión; toda validación, preprocesamiento e inferencia vive en la API del servidor.
+- **¿Por qué usaron VS Code + Express + Google AI Studio / Cloud Run y no Vercel?**  
+  Vercel está orientado a hosting estático o funciones serverless separadas del backend; nosotros integramos React + API REST + lectura CSV en un único servidor que funciona 100 % offline desde la carpeta en VS Code y en Docker/Cloud Run. AI Studio solo fue herramienta asistida de desarrollo y auditoría.
+- **¿Para qué aplicaron Regresión y Lagrange si ya tienen Random Forest?**  
+  Random Forest clasifica compra sí/no (`Revenue`); **Regresión lineal** mide la tendencia continua global (`+37 s/pág` en las `12.205` sesiones con ruido) y **Lagrange (`P₃`)** interpola con error cero por 4 perfiles representativos dentro de `[3,77 ; 84,66]` evitando el fenómeno de Runge.

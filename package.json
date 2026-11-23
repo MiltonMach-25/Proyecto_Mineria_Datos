@@ -1,0 +1,34 @@
+{
+  "name": "shoppredict",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx server.ts",
+    "build": "vite build --config Entregable_Final_ShopPredict/frontend/vite.config.ts && tsc",
+    "start": "node dist/server.js",
+    "lint": "tsc --noEmit && tsc -p Entregable_Final_ShopPredict/frontend/tsconfig.json --noEmit",
+    "test": "tsx --test src/dataset.test.ts Entregable_Final_ShopPredict/frontend/src/utils/formatters.test.ts"
+  },
+  "dependencies": {
+    "@tailwindcss/vite": "^4.3.5",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/multer": "^2.3.0",
+    "@types/node": "^26.6.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.3.0",
+    "cors": "^2.8.6",
+    "csv-parse": "^7.0.3",
+    "express": "^5.3.0",
+    "lucide-react": "^1.77.0",
+    "multer": "^2.5.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "tailwindcss": "^4.3.5",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.8"
+  }
+}

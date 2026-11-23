@@ -361,12 +361,17 @@ export function PredictionView({
         >
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div className="min-w-[220px] flex-1">
-              <label
-                htmlFor="prediction-model"
-                className="block text-sm font-semibold text-slate-900"
-              >
-                Modelo supervisado
-              </label>
+              <div className="flex items-center justify-between gap-2">
+                <label
+                  htmlFor="prediction-model"
+                  className="block text-sm font-semibold text-slate-900"
+                >
+                  Modelo supervisado de predicción
+                </label>
+                <span className="rounded bg-indigo-50 px-2 py-0.5 text-[10px] font-bold text-indigo-700">
+                  Backend POST /predict
+                </span>
+              </div>
               <select
                 id="prediction-model"
                 value={selectedModel}
@@ -375,10 +380,17 @@ export function PredictionView({
               >
                 {schema.models.map((model) => (
                   <option key={model} value={model}>
-                    {model}
+                    {model === 'Random Forest' ? `${model} (recomendado · F1 = 0,6348)` : model}
                   </option>
                 ))}
               </select>
+              <p className="mt-1.5 text-[11px] text-slate-600">
+                {selectedModel === 'Random Forest'
+                  ? 'Ensamble de árboles (impureza Gini: G = 1 − Σpₖ²); promedia votos sin requerir escalado.'
+                  : selectedModel === 'Árbol de decisión'
+                    ? 'Reglas binarias secuenciales por reducción de impureza de Gini (F1 = 0,5561).'
+                    : 'Función sigmoide P(Compra) = 1 / (1 + e⁻ᶻ) con StandardScaler previo (F1 = 0,5347).'}
+              </p>
             </div>
 
             <button

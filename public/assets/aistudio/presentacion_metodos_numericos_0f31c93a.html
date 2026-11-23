@@ -1,0 +1,1277 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f5f6fb">
+  <title>Del Salado a Chicalá · Métodos numéricos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f5f6fb;
+      --paper: #fff;
+      --ink: #17213b;
+      --muted: #66708a;
+      --line: #e4e8f1;
+      --indigo: #4f46e5;
+      --indigo-soft: #eef0ff;
+      --teal: #0d9488;
+      --teal-soft: #e7f7f4;
+      --amber: #d97706;
+      --amber-soft: #fff5e7;
+      --rose: #e11d48;
+      --rose-soft: #fff0f3;
+      --shadow: 0 16px 42px rgba(27, 35, 64, .08);
+    }
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; }
+    body {
+      overflow: hidden;
+      color: var(--ink);
+      background: var(--bg);
+      font-family: "DM Sans", Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    .progress { position: fixed; z-index: 20; inset: 0 auto auto 0; height: 5px; width: 0; background: linear-gradient(90deg, var(--indigo), var(--teal)); transition: width .35s ease; }
+    .top-dots { position: fixed; z-index: 21; top: 9px; left: 50%; display: flex; align-items: center; gap: 5px; padding: 3px 8px; border: 1px solid rgba(228,232,241,.8); border-radius: 999px; background: rgba(255,255,255,.82); transform: translateX(-50%); }
+    .top-dots .dot-btn { width: 6px; height: 6px; background: #bfc6da; }
+    .top-dots .dot-btn[aria-current="true"] { width: 17px; background: var(--indigo); }
+    .deck { position: relative; width: 100%; height: 100%; }
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      gap: clamp(14px, 2vh, 22px);
+      padding: clamp(26px, 4vw, 58px) clamp(24px, 6vw, 88px) 92px;
+      overflow: auto;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateX(28px);
+      transition: opacity .35s ease, transform .35s ease;
+      background:
+        radial-gradient(900px 460px at 100% 0%, rgba(79,70,229,.045), transparent 70%),
+        var(--bg);
+    }
+    .slide.active { z-index: 1; opacity: 1; pointer-events: auto; transform: none; }
+    .slide.active .animate { animation: rise .55s both; }
+    .slide.active .animate:nth-child(2) { animation-delay: .07s; }
+    .slide.active .animate:nth-child(3) { animation-delay: .13s; }
+    .slide.active .animate:nth-child(4) { animation-delay: .19s; }
+    @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+    .kicker { margin: 0; color: var(--indigo); font-size: .78rem; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { max-width: 930px; margin-bottom: 0; font-size: clamp(2.5rem, 5.4vw, 5.2rem); line-height: .99; letter-spacing: -.055em; }
+    h2 { margin-bottom: 0; font-size: clamp(1.8rem, 3.2vw, 3rem); line-height: 1.06; letter-spacing: -.035em; }
+    h3 { margin-bottom: 8px; font-size: clamp(1rem, 1.35vw, 1.22rem); letter-spacing: -.015em; }
+    p, li { font-size: clamp(.94rem, 1.22vw, 1.13rem); line-height: 1.55; }
+    p:last-child { margin-bottom: 0; }
+    .subtitle { max-width: 780px; color: var(--muted); font-size: clamp(1.1rem, 2vw, 1.6rem); line-height: 1.35; }
+    .muted, .hint { color: var(--muted); }
+    .hint { font-size: .84rem; line-height: 1.45; }
+    .eyebrow { color: var(--muted); font-size: .78rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(12px, 1.7vw, 22px); flex: 1; min-height: 0; }
+    .grid.wide-right { grid-template-columns: minmax(280px, .82fr) minmax(0, 1.18fr); }
+    .grid.wide-left { grid-template-columns: minmax(0, 1.18fr) minmax(280px, .82fr); }
+    .stack { display: flex; flex-direction: column; gap: clamp(10px, 1.3vw, 16px); min-width: 0; }
+    .card { min-width: 0; padding: clamp(16px, 1.8vw, 25px); border: 1px solid var(--line); border-radius: 18px; background: var(--paper); box-shadow: var(--shadow); }
+    .card.indigo { border-color: #d8dcff; background: var(--indigo-soft); }
+    .card.teal { border-color: #ccece6; background: var(--teal-soft); }
+    .card.amber { border-color: #f5dfbf; background: var(--amber-soft); }
+    .card.rose { border-color: #ffd2dc; background: var(--rose-soft); }
+    .card.dark { border: 0; color: #f7f8ff; background: #192342; }
+    .row { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; }
+    .spread { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .pill { display: inline-flex; align-items: center; padding: 5px 11px; border-radius: 999px; color: var(--indigo); background: var(--indigo-soft); font-size: .8rem; font-weight: 800; }
+    .pill.teal { color: #087c72; background: var(--teal-soft); }
+    .pill.amber { color: #a75900; background: var(--amber-soft); }
+    .pill.rose { color: #b51c3e; background: var(--rose-soft); }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 40px; padding: 9px 14px; border: 1px solid var(--indigo); border-radius: 11px; color: #fff; background: var(--indigo); font-size: .91rem; font-weight: 750; transition: transform .15s, box-shadow .15s, background .15s; }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 7px 17px rgba(79,70,229,.2); }
+    .btn.secondary { color: var(--indigo); background: #fff; }
+    .btn.teal { border-color: var(--teal); background: var(--teal); }
+    .btn.amber { border-color: var(--amber); background: var(--amber); }
+    .btn.small { min-height: 34px; padding: 6px 10px; font-size: .82rem; }
+    .formula { overflow-x: auto; padding: 14px 16px; border: 1px dashed #cbd0e5; border-radius: 13px; background: rgba(255,255,255,.82); font-size: clamp(1rem, 1.4vw, 1.3rem); }
+    .formula .katex-display { margin: .25em 0; }
+    .metric { font-size: clamp(2rem, 4vw, 3.6rem); font-weight: 800; letter-spacing: -.055em; font-variant-numeric: tabular-nums; }
+    .metric-label { color: var(--muted); font-size: .88rem; font-weight: 650; }
+    .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .metric-box { padding: 12px 14px; border: 1px solid var(--line); border-radius: 14px; background: #fff; }
+    .metric-box .metric { font-size: clamp(1.55rem, 2.7vw, 2.4rem); }
+    .canvas-box { position: relative; min-height: 250px; height: 100%; overflow: hidden; }
+    canvas.chart { display: block; width: 100%; height: 100%; min-height: 250px; }
+    .chart-card { display: flex; flex-direction: column; min-height: 300px; }
+    .chart-caption { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 16px; padding: 8px 2px 0; color: var(--muted); font-size: .78rem; }
+    .legend { display: inline-flex; align-items: center; gap: 6px; }
+    .legend i { width: 13px; height: 3px; border-radius: 4px; background: var(--indigo); }
+    .legend i.dot { width: 9px; height: 9px; border-radius: 50%; }
+    .table-wrap { width: 100%; overflow: auto; }
+    .route-table { table-layout: fixed; font-size: clamp(.68rem, .78vw, .82rem); }
+    .route-table th, .route-table td { padding: 5px 4px; white-space: normal; overflow-wrap: anywhere; }
+    table { width: 100%; border-collapse: collapse; font-size: clamp(.8rem, 1vw, .96rem); font-variant-numeric: tabular-nums; }
+    th, td { padding: 8px 10px; border-bottom: 1px solid var(--line); text-align: center; white-space: nowrap; }
+    th { color: #fff; background: #27345c; font-weight: 750; }
+    th:first-child { border-radius: 8px 0 0 0; }
+    th:last-child { border-radius: 0 8px 0 0; }
+    tr.total td { border-top: 2px solid var(--amber); background: var(--amber-soft); font-weight: 800; }
+    td input { width: 78px; padding: 6px 7px; border: 1px solid #d6dbea; border-radius: 8px; color: var(--ink); background: #fff; text-align: center; font-variant-numeric: tabular-nums; }
+    td input:focus { outline: 2px solid rgba(79,70,229,.25); border-color: var(--indigo); }
+    input[type="range"] { width: min(100%, 430px); accent-color: var(--indigo); }
+    .slider { display: grid; grid-template-columns: auto minmax(90px, 1fr) auto; align-items: center; gap: 12px; }
+    .mono, code { font-family: "DM Mono", ui-monospace, monospace; }
+    code { padding: 2px 5px; border-radius: 5px; background: #f0f2f8; font-size: .88em; }
+    .dark code { color: #fff; background: #2a3658; }
+    .notice { padding: 12px 14px; border-left: 4px solid var(--amber); border-radius: 9px; color: #754100; background: var(--amber-soft); font-size: .9rem; line-height: 1.5; }
+    .notice.red { border-left-color: var(--rose); color: #8e1835; background: var(--rose-soft); }
+    .notice.green { border-left-color: var(--teal); color: #075e57; background: var(--teal-soft); }
+    .list { margin: 0; padding-left: 1.2em; }
+    .list li + li { margin-top: 7px; }
+    .nav { position: fixed; z-index: 15; inset: auto 0 0; display: grid; grid-template-columns: minmax(110px, 1fr) auto minmax(190px, 1fr); align-items: center; gap: 14px; min-height: 67px; padding: 8px clamp(14px, 3vw, 40px); border-top: 1px solid var(--line); background: rgba(255,255,255,.93); backdrop-filter: blur(12px); }
+    .nav-title { overflow: hidden; color: var(--muted); font-size: .85rem; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+    .dots { display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .dot-btn { width: 9px; height: 9px; padding: 0; border: 0; border-radius: 99px; background: #cbd1e2; transition: width .2s, background .2s; }
+    .dot-btn[aria-current="true"] { width: 24px; background: var(--indigo); }
+    .nav-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+    .counter { min-width: 58px; color: var(--ink); text-align: center; font-size: .87rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+    .toast { position: fixed; z-index: 30; right: 20px; bottom: 82px; max-width: min(420px, calc(100vw - 40px)); padding: 11px 15px; border-radius: 11px; color: #fff; background: #1b2340; box-shadow: var(--shadow); font-size: .88rem; opacity: 0; pointer-events: none; transform: translateY(8px); transition: .2s; }
+    .toast.show { opacity: 1; transform: none; }
+    .cover { justify-content: center; background: radial-gradient(850px 520px at 92% 23%, #e1e4ff 0%, transparent 68%), radial-gradient(700px 400px at 3% 95%, #d7f3ef 0%, transparent 70%), var(--bg); }
+    .cover-content { position: relative; z-index: 1; max-width: 770px; }
+    .cover h1 span { color: var(--indigo); }
+    .cover canvas.cover-chart { position: absolute; right: 3vw; bottom: 90px; width: min(38vw, 520px); height: min(34vw, 370px); opacity: .9; }
+    .cover-chart-note { position: absolute; right: 5vw; bottom: 72px; z-index: 1; }
+    .cover-meta { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 26px; }
+    .cover-meta span { padding: 8px 12px; border: 1px solid rgba(79,70,229,.15); border-radius: 10px; background: rgba(255,255,255,.76); font-size: .84rem; font-weight: 700; }
+    .step-output { min-height: 3.2em; padding: 12px 14px; border-radius: 11px; background: #f4f5fb; line-height: 1.5; }
+    .status { min-height: 1.5em; color: var(--muted); font-size: .84rem; }
+    .ggb-area { position: relative; min-height: 320px; overflow: hidden; border: 1px solid var(--line); border-radius: 14px; background: #fff; }
+    #ggb { position: absolute; inset: 0; z-index: 1; }
+    .ggb-fallback { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 18px; color: var(--muted); background: #fff; text-align: center; }
+    .ggb-area.ready .ggb-fallback { display: none; }
+    .command { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 7px 0; padding: 9px 10px; border-radius: 9px; color: #edf0ff; background: #192342; font-size: .82rem; }
+    .command code { overflow-x: auto; color: inherit; background: transparent; white-space: nowrap; }
+    .footer-note { margin-top: auto; color: var(--muted); font-size: .78rem; }
+    @media (max-width: 900px) {
+      .grid, .grid.wide-right, .grid.wide-left { grid-template-columns: 1fr; }
+      .slide { padding-bottom: 88px; }
+      .cover canvas.cover-chart { right: 2vw; width: 45vw; opacity: .3; }
+      .cover-chart-note { right: 5vw; bottom: 65px; }
+      .grid > .card { min-height: 230px; }
+      .nav { grid-template-columns: minmax(90px, 1fr) auto minmax(150px, 1fr); gap: 7px; }
+      .dots { gap: 4px; }
+      .dot-btn { width: 7px; height: 7px; }
+      .dot-btn[aria-current="true"] { width: 18px; }
+    }
+    @media (max-width: 800px) { .nav .dots { display: none; } }
+    @media (max-width: 600px) {
+      .slide { gap: 13px; padding: 25px 17px 82px; }
+      .cover canvas.cover-chart { display: none; }
+      .cover-chart-note { display: none; }
+      .metrics { grid-template-columns: 1fr; }
+      .metric-box { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+      .nav { grid-template-columns: 1fr auto; min-height: 62px; }
+      .nav-title, .dots { display: none; }
+      .nav-actions { grid-column: 1 / -1; justify-content: space-between; }
+      .nav-actions::before { content: "← → navegar · F pantalla completa"; color: var(--muted); font-size: .72rem; }
+      .btn { min-height: 37px; padding: 8px 10px; font-size: .82rem; }
+      .chart-card { min-height: 280px; }
+    }
+    @media (min-width: 901px) and (max-height: 850px) {
+      .slide { gap: 10px; padding: 24px clamp(28px, 4vw, 58px) 76px; }
+      .grid { gap: 12px; }
+      .stack { gap: 10px; }
+      .card { padding: 14px; }
+      p, li { line-height: 1.4; }
+      th, td { padding: 5px 8px; }
+      .formula { padding: 10px 12px; }
+      .chart-card { min-height: 220px; }
+      .canvas-box { min-height: 190px; }
+      canvas.chart { min-height: 190px; }
+      .ggb-area { min-height: 235px; }
+      .slide[data-title="Calidad del ajuste"] th,
+      .slide[data-title="Calidad del ajuste"] td { padding: 3px 7px; }
+      .slide[data-title="Calidad del ajuste"] .canvas-box { flex: 0 0 180px; height: 180px; min-height: 180px; }
+      .slide[data-title="Calidad del ajuste"] canvas.chart { min-height: 145px; }
+      .slide[data-title="Lagrange aplicado"] .stack { gap: 6px; }
+      .slide[data-title="Lagrange aplicado"] .card { padding: 10px; }
+      .slide[data-title="Lagrange aplicado"] .metrics { gap: 6px; }
+      .slide[data-title="Lagrange aplicado"] .metric-box { min-width: 0; padding: 8px; }
+      .slide[data-title="Lagrange aplicado"] .metric-label { font-size: .72rem; line-height: 1.2; }
+      .slide[data-title="Lagrange aplicado"] .metric-box .metric { font-size: 1.55rem; }
+      .slide[data-title="Lagrange aplicado"] .card.indigo th,
+      .slide[data-title="Lagrange aplicado"] .card.indigo td { padding: 3px 5px; }
+      .slide[data-title="Lagrange aplicado"] .notice { padding: 8px 10px; font-size: .78rem; line-height: 1.25; }
+      .slide[data-title="Lagrange aplicado"] .chart-card .canvas-box { flex: 1; height: auto; min-height: 150px; }
+      .slide[data-title="Lagrange aplicado"] .chart-card canvas.chart { min-height: 150px; }
+        .slide[data-title="Verificar en GeoGebra"] .stack { gap: 6px; }
+        .slide[data-title="Verificar en GeoGebra"] .card { padding: 10px; }
+        .slide[data-title="Verificar en GeoGebra"] h3 { margin-bottom: 4px; }
+        .slide[data-title="Verificar en GeoGebra"] p { font-size: .9rem; line-height: 1.25; }
+        .slide[data-title="Verificar en GeoGebra"] .command { margin: 4px 0; padding: 5px 7px; font-size: .75rem; }
+        .slide[data-title="Verificar en GeoGebra"] .list li + li { margin-top: 3px; }
+        .slide[data-title="Verificar en GeoGebra"] .btn { min-height: 30px; padding: 5px 7px; font-size: .75rem; }
+      }
+      @media (min-width: 901px) {
+        .slide[data-title="Calidad del ajuste"] .chart-card { min-height: 0; }
+        .slide[data-title="Calidad del ajuste"] .chart-card .canvas-box { flex: 0 0 220px; height: 220px; min-height: 220px; }
+      }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="progress" id="progress"></div>
+  <div class="top-dots" id="topDots" aria-label="Ir a una diapositiva"></div>
+  <main class="deck" id="deck">
+    <section class="slide cover active" data-title="Portada">
+      <div class="cover-content animate">
+        <p class="kicker">Métodos numéricos · Tercer corte</p>
+        <h1>Del Salado a Chicalá:<br><span>modelar un recorrido</span></h1>
+        <p class="subtitle" style="margin-top:20px">Un caso cotidiano como hilo conductor y un ejemplo didáctico independiente para comparar Lagrange y mínimos cuadrados.</p>
+        <div class="cover-meta">
+          <span>Milton César Machado Barreto</span>
+          <span>Santiago Molina Maldonado</span>
+          <span>Raúl Andrés Triana Ortega</span>
+          <span>Docente: Juan Carlos González Sánchez</span>
+        </div>
+        <p class="hint" style="margin-top:20px">UNIMINUTO · Ingeniería de Sistemas · Ibagué</p>
+      </div>
+      <canvas class="chart cover-chart" id="cvCover" aria-label="Gráfica didáctica con puntos, interpolación y recta de regresión"></canvas>
+      <p class="hint cover-chart-note">Ejemplo didáctico sin unidades físicas · no representa ni predice el recorrido</p>
+    </section>
+
+    <section class="slide" data-title="El problema y los datos">
+      <p class="kicker animate">01 · Planteamiento</p>
+      <h2 class="animate">¿Cuánto tarda el recorrido en bicicleta?</h2>
+      <div class="grid wide-right">
+        <div class="stack">
+          <div class="card indigo animate">
+            <span class="pill">Pregunta de modelación</span>
+            <p style="margin:12px 0 0"><b>Desde El Salado Pacandé hasta UNIMINUTO Chicalá:</b> ¿cuánto tarda mi recorrido y qué factores hacen variar ese tiempo?</p>
+          </div>
+          <div class="card animate">
+            <h3>Mi ruta habitual · puntos de referencia</h3>
+            <div class="table-wrap">
+              <table class="route-table" aria-label="Puntos de referencia y estimaciones acumuladas">
+                <colgroup><col style="width:39%"><col style="width:15%"><col style="width:21%"><col style="width:25%"></colgroup>
+                <thead><tr><th>Punto de referencia</th><th>km</th><th>Tramo (min)</th><th>Acum.¹ (min)</th></tr></thead>
+                <tbody id="routeRows"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="notice animate"><b>Alcance de los datos:</b> los 2,9 km totales fueron confirmados con Google Maps y el reloj; las distancias intermedias son las referencias de ruta que indicaste. Los tiempos por tramo son estimaciones personales, no parciales registrados juntos en una actividad. El acumulado de la tabla supone que el primer tramo toma aproximadamente 3 min; como indicaste que es un mínimo, el total puede variar. Tu rango general reportado es 17–22 min.</div>
+        </div>
+        <div class="card chart-card animate">
+          <div class="spread"><h3>Recorrido y tiempos acumulados estimados</h3><span class="pill teal">Salida → Chicalá</span></div>
+          <div class="canvas-box"><canvas class="chart" id="cvData" aria-label="Distancias y rangos de tiempo estimado por punto de la ruta"></canvas></div>
+          <div class="chart-caption"><span class="legend"><i class="dot"></i> punto de referencia</span><span class="legend"><i style="background:var(--rose)"></i> rango estimado acumulado</span><span class="hint">La suma supone ≈3 min al primer tramo; no son parciales del reloj.</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="Interpolación o regresión">
+      <p class="kicker animate">02 · Dos preguntas distintas</p>
+      <h2 class="animate">¿Pasar por los datos o describir su tendencia?</h2>
+      <div class="grid wide-right">
+        <div class="stack">
+          <div class="card animate">
+            <h3>Explora un conjunto didáctico (no es el registro del viaje)</h3>
+            <div class="row">
+              <button class="btn secondary" data-mode="points">Solo datos</button>
+              <button class="btn" data-mode="lagrange">Interpolar</button>
+              <button class="btn teal" data-mode="regression">Ajustar recta</button>
+            </div>
+            <p id="compareText" style="margin:14px 0 0">Estos valores se eligieron solo para desarrollar y comparar los métodos; no son tiempos ni mediciones de tu recorrido.</p>
+            <p id="demoDataText" class="hint" style="margin:10px 0 0"></p>
+          </div>
+          <div class="card indigo animate">
+            <h3>Idea clave</h3>
+            <p><b>Lagrange</b> interpola: reproduce cada dato (nodo). <b>Mínimos cuadrados</b> ajusta: minimiza el error cuadrático total, sin exigir que la recta pase por todos.</p>
+          </div>
+          <div class="notice animate"><b>Runge:</b> con muchos nodos equiespaciados, un polinomio de grado alto puede oscilar. Para datos con ruido, una curva que pase por cada punto también puede sobreajustar.</div>
+        </div>
+        <div class="card chart-card animate">
+          <h3>Una nube didáctica, dos modelos</h3>
+          <div class="canvas-box"><canvas class="chart" id="cvCompare" aria-label="Comparación interactiva de modelos"></canvas></div>
+          <div class="chart-caption"><span class="legend"><i class="dot"></i> datos</span><span class="legend"><i style="background:var(--teal)"></i> Lagrange</span><span class="legend"><i style="background:var(--amber)"></i> regresión</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="La idea de Lagrange">
+      <p class="kicker animate">03 · Interpolación polinomial</p>
+      <h2 class="animate">Lagrange construye una base para cada nodo</h2>
+      <div class="grid">
+        <div class="stack">
+          <div class="card animate">
+            <div class="formula">$$P_n(x)=\sum_{i=0}^{n} y_iL_i(x),\qquad L_i(x)=\prod_{\substack{j=0\\j\ne i}}^{n}\frac{x-x_j}{x_i-x_j}$$</div>
+            <p style="margin:14px 0 0">Cada base cumple \(L_i(x_i)=1\) y \(L_i(x_j)=0\) si \(j\ne i\). Por eso la suma recupera exactamente cada \(y_i\).</p>
+          </div>
+          <div class="card teal animate">
+            <h3>Selecciona una base</h3>
+            <div class="row" id="basisButtons"></div>
+            <p class="hint" style="margin:10px 0 0">La propiedad de Kronecker \(\delta_{ij}\) explica cómo se "enciende" una sola base en cada nodo.</p>
+          </div>
+        </div>
+        <div class="card chart-card animate">
+          <h3>Bases de Lagrange del ejemplo didáctico</h3>
+          <div class="canvas-box"><canvas class="chart" id="cvBasis" aria-label="Polinomios base de Lagrange"></canvas></div>
+          <div class="chart-caption" id="basisLegend"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="Lagrange aplicado">
+      <p class="kicker animate">04 · Aplicación</p>
+      <h2 class="animate">Evaluar el interpolante en el ejemplo</h2>
+      <div class="grid wide-right">
+        <div class="stack">
+          <div class="card animate">
+            <h3>Explora la posición \(x\)</h3>
+            <div class="slider"><label for="lagrangeX">Valor de \(x\) (unidades didácticas)</label><input id="lagrangeX" type="range" min="0" max="4" step="0.05" value="2"><strong id="lagrangeXLabel" class="mono">2,00</strong></div>
+            <div class="metrics" style="margin-top:13px">
+              <div class="metric-box"><span class="metric-label">\(P_4(x)\), unid. de \(y\)</span><div class="metric"><span id="lagrangeValue">—</span></div></div>
+              <div class="metric-box"><span class="metric-label">Nodos usados \(n\)</span><div class="metric" id="lagrangeDegree">—</div></div>
+              <div class="metric-box"><span class="metric-label">Bases suman</span><div class="metric" id="basisSum">—</div></div>
+            </div>
+          </div>
+          <div class="card indigo animate">
+            <h3>Construcción en esta posición</h3>
+            <div class="table-wrap"><table><thead><tr><th>i</th><th>\(x_i\)</th><th>\(y_i\)</th><th>\(L_i(x)\)</th><th>\(y_iL_i(x)\)</th></tr></thead><tbody id="lagrangeRows"></tbody></table></div>
+            <p class="hint" style="margin-top:8px">La suma de la última columna es \(P_n(x)\). El valor puede salir del intervalo observado entre puntos.</p>
+          </div>
+          <div class="notice red animate"><b>Alcance:</b> este conjunto didáctico no predice tu viaje. Lagrange pasa por los nodos, pero no garantiza precisión entre ellos; con datos ruidosos o grado alto puede sobreajustar u oscilar.</div>
+        </div>
+        <div class="card chart-card animate">
+          <h3>Polinomio y punto de evaluación</h3>
+          <div class="canvas-box"><canvas class="chart" id="cvLagrange" aria-label="Interpolante de Lagrange y punto evaluado"></canvas></div>
+          <div class="formula" id="lagrangePolynomial" style="font-size:.95rem"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="Regresión lineal">
+      <p class="kicker animate">05 · Mínimos cuadrados</p>
+      <h2 class="animate">La recta que minimiza la suma de residuos al cuadrado</h2>
+      <div class="grid">
+        <div class="stack">
+          <div class="card animate">
+            <div class="formula">$$\hat y=a_0+a_1x,\qquad e_i=y_i-\hat y_i,\qquad S_r=\sum_{i=1}^{n}e_i^2$$</div>
+            <p style="margin:12px 0 0">Elevar al cuadrado evita que errores positivos y negativos se cancelen y penaliza más los errores grandes.</p>
+          </div>
+          <div class="card indigo animate">
+            <div class="formula">$$a_1=\frac{n\sum x_iy_i-\sum x_i\sum y_i}{n\sum x_i^2-(\sum x_i)^2},\qquad a_0=\bar y-a_1\bar x$$</div>
+          </div>
+          <div class="card animate">
+            <div class="spread"><h3>Mostrar residuos</h3><label class="row"><input id="showResiduals" type="checkbox" checked> líneas verticales \(e_i\)</label></div>
+            <p class="hint">Los residuos son distancias verticales entre cada observación y la recta ajustada.</p>
+          </div>
+        </div>
+        <div class="card chart-card animate">
+          <h3>Ejemplo didáctico y residuos</h3>
+          <div class="canvas-box"><canvas class="chart" id="cvRegression" aria-label="Recta de mínimos cuadrados con residuos"></canvas></div>
+          <div class="formula" id="regressionEquation"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="Cálculo de la regresión">
+      <p class="kicker animate">06 · Cálculo reproducible</p>
+      <h2 class="animate">De los datos a \(a_0\) y \(a_1\)</h2>
+      <div class="grid wide-right">
+        <div class="stack">
+          <div class="card animate">
+            <h3>Tabla de sumatorias</h3>
+            <div class="table-wrap"><table><thead><tr><th>i</th><th>\(x_i\)</th><th>\(y_i\)</th><th>\(x_i^2\)</th><th>\(x_iy_i\)</th></tr></thead><tbody id="sumsRows"></tbody></table></div>
+            <button class="btn" id="nextCalculation" style="margin-top:12px">Mostrar el siguiente paso</button>
+          </div>
+          <div class="card indigo animate">
+            <h3>Derivación paso a paso</h3>
+            <div id="calculationStep" class="step-output" aria-live="polite">Presiona «Mostrar el siguiente paso» para desarrollar las sumatorias y los coeficientes.</div>
+          </div>
+          <div class="card teal animate">
+            <p><b>Interpretación del ejemplo:</b> por cada unidad adicional de \(x\), el modelo estima un cambio de <b id="slopeMeaning">—</b> unidades de \(y\). No corresponde al ritmo de tu viaje.</p>
+          </div>
+        </div>
+        <div class="card chart-card animate">
+          <h3>La recta atraviesa el centroide \((\bar x,\bar y)\)</h3>
+          <div class="canvas-box"><canvas class="chart" id="cvFit" aria-label="Regresión lineal y centroide"></canvas></div>
+          <div class="metrics">
+            <div class="metric-box"><span class="metric-label">Intercepto \(a_0\)</span><div id="interceptValue" class="metric">—</div></div>
+            <div class="metric-box"><span class="metric-label">Pendiente \(a_1\)</span><div id="slopeValue" class="metric">—</div></div>
+            <div class="metric-box"><span class="metric-label">Ecuación estimada</span><div id="fitEquationShort" style="font-weight:800">—</div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="Comparar modelos">
+      <p class="kicker animate">07 · Evaluación interactiva del ejemplo</p>
+      <h2 class="animate">¿Qué valores dan los dos modelos para el mismo \(x\)?</h2>
+      <div class="grid wide-right">
+        <div class="stack">
+          <div class="card animate">
+            <div class="slider"><label for="compareX">Valor de \(x\) (unidades didácticas)</label><input id="compareX" type="range" min="0" max="5" step="0.1" value="2"><strong id="compareXLabel" class="mono">2,0</strong></div>
+            <div class="metrics" style="margin-top:16px">
+              <div class="metric-box"><span class="metric-label">Lagrange (unid. de \(y\))</span><div class="metric"><span id="compareLagrange">—</span></div></div>
+              <div class="metric-box"><span class="metric-label">Regresión (unid. de \(y\))</span><div class="metric"><span id="compareRegression">—</span></div></div>
+              <div class="metric-box"><span class="metric-label">Diferencia \(|\Delta|\) (unid. de \(y\))</span><div class="metric"><span id="compareDelta">—</span></div></div>
+            </div>
+          </div>
+          <div id="compareWarning" class="notice animate"></div>
+          <div class="card amber animate">
+            <p><b>Pregunta para discutir:</b> dentro del intervalo del ejemplo, ¿qué diferencia observas entre interpolar los nodos y ajustar una tendencia?</p>
+          </div>
+        </div>
+        <div class="card chart-card animate">
+          <h3>Valores de los modelos en el punto seleccionado</h3>
+          <div class="canvas-box"><canvas class="chart" id="cvPrediction" aria-label="Comparación de valores de los modelos en el ejemplo didáctico"></canvas></div>
+          <div class="chart-caption"><span class="legend"><i style="background:var(--teal)"></i> Lagrange</span><span class="legend"><i style="background:var(--amber)"></i> regresión</span><span class="hint">Sombreado rojo: fuera del rango de datos.</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="Calidad del ajuste">
+      <p class="kicker animate">08 · Diagnóstico</p>
+      <h2 class="animate">Medir qué tan bien representa la recta los datos</h2>
+      <div class="grid wide-right">
+        <div class="stack">
+          <div class="card animate">
+            <div class="formula">$$R^2=1-\frac{\sum e_i^2}{\sum (y_i-\bar y)^2}$$ $$r=\operatorname{sign}(a_1)\sqrt{R^2}$$ $$S_{y/x}=\sqrt{\frac{\sum e_i^2}{n-2}}$$</div>
+            <p style="margin:12px 0 0"><b>\(R^2\)</b> resume la proporción de variación explicada por la recta; <b>\(r\)</b> indica dirección y fuerza lineal; <b>\(S_{y/x}\)</b> estima el tamaño típico del residuo.</p>
+          </div>
+          <div class="metrics animate">
+            <div class="metric-box"><span class="metric-label">\(R^2\)</span><div id="rSquared" class="metric">—</div></div>
+            <div class="metric-box"><span class="metric-label">Correlación \(r\)</span><div id="correlation" class="metric">—</div></div>
+            <div class="metric-box"><span class="metric-label">Error \(S_{y/x}\) (unidades de \(y\))</span><div id="standardError" class="metric">—</div></div>
+          </div>
+          <div class="notice animate"><b>Alcance e interpretación:</b> estos estadísticos se calculan con el ejemplo didáctico, cuyas variables no tienen unidades físicas. Un \(R^2\) alto no demuestra causalidad ni garantiza precisión fuera del rango; revise residuos, contexto y calidad de las mediciones.</div>
+        </div>
+        <div class="stack">
+          <div class="card animate">
+            <h3>Observado, estimado y residuo</h3>
+            <div class="table-wrap"><table><thead><tr><th>\(x_i\)</th><th>\(y_i\)</th><th>\(\hat y_i\)</th><th>\(e_i\)</th><th>\(e_i^2\)</th></tr></thead><tbody id="residualRows"></tbody><tfoot id="residualTotals"></tfoot></table></div>
+          </div>
+          <div class="card chart-card animate" style="min-height:240px">
+            <h3>Residuos: patrón alrededor de cero</h3>
+            <div class="canvas-box"><canvas class="chart" id="cvResiduals" aria-label="Gráfico de residuos de regresión"></canvas></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="Verificar en GeoGebra">
+      <p class="kicker animate">09 · Verificación externa</p>
+      <h2 class="animate">Comprobar el resultado en GeoGebra</h2>
+      <div class="grid wide-right">
+        <div class="stack">
+          <div class="card dark animate">
+            <h3>Comandos de GeoGebra Classic</h3>
+            <p class="hint" style="color:#c6cce2">Estos comandos verifican el conjunto didáctico; no modelan las mediciones de tu viaje.</p>
+            <div class="command"><code id="ggbPointsCommand">P = {}</code><button class="btn small secondary" data-copy="points">Copiar</button></div>
+            <div class="command"><code id="ggbLagrangeCommand">f = Polynomial(P)</code><button class="btn small secondary" data-copy="lagrange">Copiar</button></div>
+            <div class="command"><code id="ggbFitCommand">g = FitLine(P)</code><button class="btn small secondary" data-copy="fit">Copiar</button></div>
+          </div>
+          <div class="card animate">
+            <h3>Exploración guiada</h3>
+            <ol class="list">
+              <li>Comprueba que el polinomio interpolante pase por cada punto.</li>
+              <li>Compara la recta de regresión y observa los residuos.</li>
+              <li>Abre el panel algebraico para contrastar ecuaciones y valores.</li>
+            </ol>
+            <div class="row" style="margin-top:12px">
+              <button class="btn" id="ggbLoadLagrange">Cargar Lagrange</button>
+              <button class="btn teal" id="ggbLoadFit">Cargar regresión</button>
+              <button class="btn secondary" id="ggbClear">Limpiar</button>
+              <a class="btn secondary" href="https://www.geogebra.org/classic" target="_blank" rel="noopener noreferrer">Abrir GeoGebra ↗</a>
+            </div>
+            <p id="ggbStatus" class="status" aria-live="polite">Intentando cargar GeoGebra; la gráfica local sigue disponible como respaldo.</p>
+          </div>
+        </div>
+        <div class="stack">
+          <div class="card ggb-area animate" id="ggbArea">
+            <div id="ggb"></div>
+            <div class="ggb-fallback">
+              <b>Vista local de respaldo</b>
+              <div style="width:100%;height:230px"><canvas class="chart" id="cvGgbFallback" aria-label="Respaldo local de la gráfica GeoGebra"></canvas></div>
+              <span class="hint">Si hay conexión, espera la carga del applet o usa «Abrir GeoGebra» y pega los comandos.</span>
+            </div>
+          </div>
+          <div class="notice animate">Si el navegador bloquea el applet al abrir el archivo localmente, la alternativa es abrir GeoGebra en una pestaña y pegar los comandos de la izquierda.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="Respuesta al problema">
+      <p class="kicker animate">10 · Respuesta situada</p>
+      <h2 class="animate">¿Qué significa el tiempo de mi trayecto?</h2>
+      <div class="grid">
+        <div class="stack">
+          <div class="card teal animate">
+            <span class="pill teal">Lo que reportas de tu experiencia</span>
+            <p style="margin:12px 0 0">La ruta a Chicalá es de <b>2,9 km</b>. Tu tiempo habitual en bicicleta lo sitúas aproximadamente entre <b>17 y 22 minutos</b>; la suma de los tramos estimados da alrededor de <b>19–21 minutos</b>, un cálculo orientativo dentro de ese rango.</p>
+            <p id="destinationAnswer" style="margin:10px 0 0;font-size:clamp(1.15rem,1.8vw,1.5rem);font-weight:800">Ambos rangos son aproximados y compatibles; aún no son un registro de parciales tomado de una misma salida.</p>
+          </div>
+          <div class="card animate">
+            <h3>Del trayecto al salón</h3>
+            <ul class="list">
+              <li>Registrar tus elementos: aproximadamente 2–3 min.</li>
+              <li>Estacionar, recuperar el aliento y entrar: aproximadamente 1–2 min.</li>
+              <li>Son 3–5 min adicionales; sumados a tu rango general de 17–22 min en bicicleta, llegarías al salón en aproximadamente 20–27 min.</li>
+            </ul>
+          </div>
+          <div class="notice red animate"><b>Límite del análisis:</b> los métodos de Lagrange y regresión de las diapositivas siguientes usan un conjunto didáctico separado. No predicen tu tiempo real porque faltan parciales de tiempo medidos simultáneamente con las distancias.</div>
+        </div>
+        <div class="card chart-card animate">
+          <h3>Dos etapas distintas: pedaleo y llegada al aula</h3>
+          <div class="canvas-box"><canvas class="chart" id="cvDestination" aria-label="Rangos aproximados de viaje en bicicleta y tiempo adicional hasta el aula"></canvas></div>
+          <div class="chart-caption"><span class="legend"><i style="background:var(--indigo)"></i> bicicleta (17–22 min, rango habitual)</span><span class="legend"><i style="background:var(--amber)"></i> subtotal por tramos (19–21 min, supone ≈3 min al inicio)</span><span class="legend"><i style="background:var(--teal)"></i> aula (20–27 min, rango habitual + 3–5 min)</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="Conclusiones y cierre">
+      <p class="kicker animate">11 · Cierre</p>
+      <h2 class="animate">Modelar es convertir datos en decisiones informadas</h2>
+      <div class="grid">
+        <div class="stack">
+          <div class="card indigo animate">
+            <h3>Lagrange</h3>
+            <p>Exacto en los nodos; útil para interpolar datos precisos, pero sensible a ruido y a polinomios de grado alto.</p>
+          </div>
+          <div class="card teal animate">
+            <h3>Regresión lineal</h3>
+            <p>Resume una tendencia y cuantifica el ajuste con residuos y \(R^2\); no implica que todos los puntos caigan sobre la recta.</p>
+          </div>
+          <div class="card amber animate">
+            <h3>Para este trayecto</h3>
+            <p>La ruta y los tiempos aproximados dan contexto personal. Los cálculos de Lagrange y regresión se presentan con datos didácticos independientes, no como predicciones de este viaje.</p>
+            <p style="margin-top:8px"><b>Siguiente paso:</b> registrar distancia y tiempo acumulado en los mismos puntos durante una salida; repetir el recorrido para comparar ritmos.</p>
+          </div>
+          <div class="card animate">
+            <h3>Conexión con cortes anteriores</h3>
+            <p>Newton-Raphson aproxima raíces, \(x_{k+1}=x_k-f(x_k)/f'(x_k)\); Euler aproxima soluciones de \(y'=f(t,y)\), \(y_{k+1}=y_k+h f(t_k,y_k)\). Cada método responde a una pregunta numérica distinta.</p>
+          </div>
+        </div>
+        <div class="stack">
+          <div class="card dark animate" style="display:flex;flex-direction:column;justify-content:center;min-height:240px">
+            <span class="eyebrow" style="color:#bfc7e8">Para conversar</span>
+            <h3 style="margin-top:12px;font-size:clamp(1.5rem,2.4vw,2.2rem)">¿Qué otros problemas de la vida diaria en Ibagué podríamos modelar con métodos numéricos?</h3>
+            <p style="color:#d7dcf0">Gracias por su atención.</p>
+          </div>
+          <div class="card animate">
+            <p><b>Milton César Machado Barreto</b><br><b>Santiago Molina Maldonado</b><br><b>Raúl Andrés Triana Ortega</b></p>
+            <p class="hint">Docente: Juan Carlos González Sánchez · UNIMINUTO Ibagué</p>
+          </div>
+        </div>
+      </div>
+      <p class="footer-note">Use ← / → o la barra espaciadora para navegar · F para pantalla completa · Esc para salir.</p>
+    </section>
+  </main>
+
+  <nav class="nav" aria-label="Navegación de la presentación">
+    <div class="nav-title" id="navTitle">Portada</div>
+    <div class="dots" id="dots"></div>
+    <div class="nav-actions">
+      <button class="btn secondary small" id="prev" aria-label="Diapositiva anterior">← Anterior</button>
+      <span class="counter" id="counter" aria-live="polite">01 / 12</span>
+      <button class="btn small" id="next" aria-label="Diapositiva siguiente">Siguiente →</button>
+      <button class="btn secondary small" id="fullscreen" aria-label="Alternar pantalla completa" title="Pantalla completa (F)">⛶</button>
+    </div>
+  </nav>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    "use strict";
+    // Datos didácticos independientes; no representan los tiempos del trayecto del estudiante.
+    const datos = [
+      { x: 0, y: 1 },
+      { x: 1, y: 2 },
+      { x: 2, y: 2 },
+      { x: 3, y: 4 },
+      { x: 4, y: 5 }
+    ];
+    const ruta = [
+      { lugar: "Salida · El Salado Pacandé", x: 0, tramo: "—", minimo: 0, maximo: 0 },
+      { lugar: "Cooperativa", x: 0.9, tramo: "≈3 min (mínimo reportado)", minimo: 3, maximo: 3 },
+      { lugar: "Mercacentro N.º 11 · Arkala", x: 1.7, tramo: "4–5 min", minimo: 7, maximo: 8 },
+      { lugar: "Semáforo de Chicalá", x: 1.9, tramo: "3–4 min", minimo: 10, maximo: 12 },
+      { lugar: "Estación de policía", x: 2.2, tramo: "≈4 min", minimo: 14, maximo: 16 },
+      { lugar: "Entrada · UNIMINUTO Chicalá", x: 2.9, tramo: "≈5 min", minimo: 19, maximo: 21 }
+    ];
+    const COLORS = { ink: "#17213b", muted: "#66708a", grid: "#e7eaf2", indigo: "#4f46e5", teal: "#0d9488", amber: "#d97706", rose: "#e11d48", white: "#fff" };
+    const slides = [...document.querySelectorAll(".slide")];
+    let activeSlide = 0;
+    let basisSelection = "all";
+    let compareMode = "points";
+    let calculationStep = 0;
+    let regression = null;
+    let toastTimer = 0;
+    let slideDrawTimer = 0;
+    let ggbApi = null;
+
+    const byId = id => document.getElementById(id);
+    const fmt = (value, digits = 2) => Number.isFinite(value) ? Number(value).toFixed(digits).replace(".", ",") : "—";
+    const fmtCompact = (value, digits = 3) => {
+      if (!Number.isFinite(value)) return "—";
+      const rounded = Number(value).toFixed(digits).replace(/\.?0+$/, "");
+      return (rounded === "-0" ? "0" : rounded).replace(".", ",");
+    };
+    const fmtInput = value => String(value).replace(".", ",");
+    const xValues = () => datos.map(point => point.x);
+    const yValues = () => datos.map(point => point.y);
+    const minX = () => Math.min(...xValues());
+    const maxX = () => Math.max(...xValues());
+
+    function showToast(message) {
+      const toast = byId("toast");
+      toast.textContent = message;
+      toast.classList.add("show");
+      window.clearTimeout(toastTimer);
+      toastTimer = window.setTimeout(() => toast.classList.remove("show"), 2600);
+    }
+
+    function calcBaseLagrange(index, x) {
+      let basis = 1;
+      for (let j = 0; j < datos.length; j += 1) {
+        if (j !== index) basis *= (x - datos[j].x) / (datos[index].x - datos[j].x);
+      }
+      return basis;
+    }
+
+    function calcLagrange(x) {
+      const node = datos.find(point => Math.abs(point.x - x) < 1e-10);
+      if (node) return node.y;
+      return datos.reduce((sum, point, index) => sum + point.y * calcBaseLagrange(index, x), 0);
+    }
+
+    function calcRegresion() {
+      const n = datos.length;
+      const sumX = datos.reduce((sum, point) => sum + point.x, 0);
+      const sumY = datos.reduce((sum, point) => sum + point.y, 0);
+      const sumX2 = datos.reduce((sum, point) => sum + point.x ** 2, 0);
+      const sumXY = datos.reduce((sum, point) => sum + point.x * point.y, 0);
+      const denominator = n * sumX2 - sumX ** 2;
+      if (n < 3 || Math.abs(denominator) < 1e-12) throw new Error("Se requieren al menos tres valores distintos de x para ajustar y evaluar la regresión.");
+      const a1 = (n * sumXY - sumX * sumY) / denominator;
+      const a0 = sumY / n - a1 * (sumX / n);
+      const meanY = sumY / n;
+      const residuals = datos.map(point => point.y - (a0 + a1 * point.x));
+      const sse = residuals.reduce((sum, residual) => sum + residual ** 2, 0);
+      const sst = datos.reduce((sum, point) => sum + (point.y - meanY) ** 2, 0);
+      const r2 = sst > 0 ? 1 - sse / sst : NaN;
+      const r = Math.sign(a1) * Math.sqrt(Math.max(0, r2));
+      return {
+        n, sumX, sumY, sumX2, sumXY, denominator, a0, a1, meanX: sumX / n, meanY,
+        residuals, sse, sst, r2, r, standardError: Math.sqrt(sse / (n - 2))
+      };
+    }
+
+    function calculatePolynomialCoefficients() {
+      let coefficients = [0];
+      for (let i = 0; i < datos.length; i += 1) {
+        let basis = [1];
+        let denominator = 1;
+        for (let j = 0; j < datos.length; j += 1) {
+          if (j === i) continue;
+          const next = Array(basis.length + 1).fill(0);
+          basis.forEach((coefficient, degree) => {
+            next[degree] -= datos[j].x * coefficient;
+            next[degree + 1] += coefficient;
+          });
+          basis = next;
+          denominator *= datos[i].x - datos[j].x;
+        }
+        basis.forEach((coefficient, degree) => {
+          coefficients[degree] = (coefficients[degree] || 0) + datos[i].y * coefficient / denominator;
+        });
+      }
+      return coefficients;
+    }
+
+    function polynomialText() {
+      return calculatePolynomialCoefficients().map((coefficient, degree) => {
+        const sign = coefficient < 0 ? " − " : degree === 0 ? "" : " + ";
+        const magnitude = fmt(Math.abs(coefficient), 3);
+        const term = degree === 0 ? magnitude : `${magnitude}x${degree > 1 ? `<sup>${degree}</sup>` : ""}`;
+        return `${sign}${term}`;
+      }).join("");
+    }
+
+    function canvasContext(canvas) {
+      const rect = canvas.getBoundingClientRect();
+      if (rect.width < 20 || rect.height < 20) return null;
+      const ratio = window.devicePixelRatio || 1;
+      canvas.width = Math.round(rect.width * ratio);
+      canvas.height = Math.round(rect.height * ratio);
+      const context = canvas.getContext("2d");
+      context.setTransform(ratio, 0, 0, ratio, 0, 0);
+      return { context, width: rect.width, height: rect.height };
+    }
+
+    function niceStep(span, count = 5) {
+      const raw = span / count;
+      const power = 10 ** Math.floor(Math.log10(Math.max(raw, 1e-9)));
+      const fraction = raw / power;
+      return (fraction <= 1 ? 1 : fraction <= 2 ? 2 : fraction <= 5 ? 5 : 10) * power;
+    }
+
+    function drawAxes(context, width, height, bounds, margins) {
+      const { left, right, top, bottom } = margins;
+      const plotWidth = width - left - right;
+      const plotHeight = height - top - bottom;
+      const sx = x => left + (x - bounds.xmin) / (bounds.xmax - bounds.xmin) * plotWidth;
+      const sy = y => top + (bounds.ymax - y) / (bounds.ymax - bounds.ymin) * plotHeight;
+      context.save();
+      context.font = "11px 'DM Sans', sans-serif";
+      context.lineWidth = 1;
+      context.textAlign = "center";
+      const xStep = niceStep(bounds.xmax - bounds.xmin, 5);
+      for (let x = Math.ceil(bounds.xmin / xStep) * xStep; x <= bounds.xmax + xStep * 1e-6; x += xStep) {
+        const px = sx(x);
+        context.strokeStyle = COLORS.grid;
+        context.beginPath(); context.moveTo(px, top); context.lineTo(px, height - bottom); context.stroke();
+        context.fillStyle = COLORS.muted;
+        context.fillText(Number(x.toPrecision(3)).toString().replace(".", ","), px, height - bottom + 17);
+      }
+      const yStep = niceStep(bounds.ymax - bounds.ymin, 5);
+      context.textAlign = "right";
+      for (let y = Math.ceil(bounds.ymin / yStep) * yStep; y <= bounds.ymax + yStep * 1e-6; y += yStep) {
+        const py = sy(y);
+        context.strokeStyle = COLORS.grid;
+        context.beginPath(); context.moveTo(left, py); context.lineTo(width - right, py); context.stroke();
+        context.fillStyle = COLORS.muted;
+        context.fillText(Number(y.toPrecision(3)).toString().replace(".", ","), left - 7, py + 4);
+      }
+      context.strokeStyle = "#9ca5bd";
+      context.lineWidth = 1.3;
+      context.beginPath(); context.moveTo(left, top); context.lineTo(left, height - bottom); context.lineTo(width - right, height - bottom); context.stroke();
+      context.fillStyle = COLORS.muted;
+      context.font = "600 11px 'DM Sans', sans-serif";
+      context.textAlign = "center";
+      context.fillText(bounds.xlabel || "x (unid. didácticas)", left + plotWidth / 2, height - 7);
+      context.save();
+      context.translate(13, top + plotHeight / 2);
+      context.rotate(-Math.PI / 2);
+      context.fillText(bounds.ylabel || "y (unid. didácticas)", 0, 0);
+      context.restore();
+      context.restore();
+      return { sx, sy, left, right, top, bottom, plotWidth, plotHeight };
+    }
+
+    function drawPlot(canvasId, options = {}) {
+      const canvas = byId(canvasId);
+      if (!canvas) return;
+      const setup = canvasContext(canvas);
+      if (!setup) return;
+      const { context: ctx, width, height } = setup;
+      const points = options.points || datos.map(point => [point.x, point.y]);
+      const xDomain = options.xDomain || [minX() - .18, maxX() + .18];
+      const yValuesInPlot = points.map(point => point[1]);
+      for (let i = 0; i <= 160; i += 1) {
+        const x = xDomain[0] + (xDomain[1] - xDomain[0]) * i / 160;
+        (options.functions || []).forEach(curve => {
+          const value = curve.fn(x);
+          if (Number.isFinite(value) && Math.abs(value) < 1e6) yValuesInPlot.push(value);
+        });
+      }
+      if (options.residuals && regression) regression.residuals.forEach((_, i) => yValuesInPlot.push(regression.a0 + regression.a1 * datos[i].x));
+      if (options.residualValues) yValuesInPlot.push(...options.residualValues);
+      if (options.zeroLine) yValuesInPlot.push(0);
+      let ymin = options.yDomain ? options.yDomain[0] : Math.min(0, ...yValuesInPlot);
+      let ymax = options.yDomain ? options.yDomain[1] : Math.max(1, ...yValuesInPlot);
+      if (Math.abs(ymax - ymin) < 1e-9) { ymin -= 1; ymax += 1; }
+      const pad = (ymax - ymin) * .12;
+      if (!options.yDomain) { ymin -= pad; ymax += pad; }
+      const bounds = { xmin: xDomain[0], xmax: xDomain[1], ymin, ymax, xlabel: options.xlabel, ylabel: options.ylabel };
+      const margin = { left: 52, right: 18, top: 20, bottom: 42 };
+      ctx.clearRect(0, 0, width, height);
+      const map = drawAxes(ctx, width, height, bounds, margin);
+      ctx.save();
+      ctx.beginPath(); ctx.rect(map.left, map.top, map.plotWidth, map.plotHeight); ctx.clip();
+
+      if (options.shadeOutside) {
+        ctx.fillStyle = "rgba(225,29,72,.09)";
+        if (xDomain[0] < minX()) ctx.fillRect(map.sx(xDomain[0]), map.top, map.sx(Math.min(minX(), xDomain[1])) - map.sx(xDomain[0]), map.plotHeight);
+        if (xDomain[1] > maxX()) ctx.fillRect(map.sx(Math.max(maxX(), xDomain[0])), map.top, map.sx(xDomain[1]) - map.sx(Math.max(maxX(), xDomain[0])), map.plotHeight);
+      }
+      if (options.zeroLine) {
+        ctx.strokeStyle = "#aab1c3"; ctx.setLineDash([4, 4]); ctx.beginPath();
+        ctx.moveTo(map.left, map.sy(0)); ctx.lineTo(width - map.right, map.sy(0)); ctx.stroke(); ctx.setLineDash([]);
+      }
+      if (options.residuals && regression) {
+        datos.forEach((point, index) => {
+          const estimate = regression.a0 + regression.a1 * point.x;
+          ctx.strokeStyle = regression.residuals[index] < 0 ? COLORS.rose : COLORS.teal;
+          ctx.lineWidth = 1.5; ctx.setLineDash([4, 3]); ctx.beginPath();
+          ctx.moveTo(map.sx(point.x), map.sy(point.y)); ctx.lineTo(map.sx(point.x), map.sy(estimate)); ctx.stroke(); ctx.setLineDash([]);
+        });
+      }
+      (options.functions || []).forEach(curve => {
+        ctx.strokeStyle = curve.color || COLORS.indigo;
+        ctx.lineWidth = curve.width || 2.8;
+        ctx.setLineDash(curve.dash || []);
+        ctx.beginPath();
+        let started = false;
+        for (let i = 0; i <= 320; i += 1) {
+          const x = xDomain[0] + (xDomain[1] - xDomain[0]) * i / 320;
+          const y = curve.fn(x);
+          if (!Number.isFinite(y) || Math.abs(y) > 1e6) { started = false; continue; }
+          if (!started) { ctx.moveTo(map.sx(x), map.sy(y)); started = true; }
+          else ctx.lineTo(map.sx(x), map.sy(y));
+        }
+        ctx.stroke(); ctx.setLineDash([]);
+      });
+      if (options.verticals) {
+        options.verticals.forEach(item => {
+          ctx.strokeStyle = item.color || COLORS.rose; ctx.setLineDash([4, 3]); ctx.beginPath();
+          ctx.moveTo(map.sx(item.x), map.sy(item.y1)); ctx.lineTo(map.sx(item.x), map.sy(item.y2)); ctx.stroke(); ctx.setLineDash([]);
+        });
+      }
+      points.forEach((point, index) => {
+        const isHighlight = options.highlightIndex === index;
+        ctx.beginPath();
+        ctx.fillStyle = (options.pointColors && options.pointColors[index]) || (isHighlight ? COLORS.rose : COLORS.indigo);
+        ctx.arc(map.sx(point[0]), map.sy(point[1]), isHighlight ? 6.5 : 4.7, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = "#fff"; ctx.lineWidth = 1.5; ctx.stroke();
+      });
+      (options.markers || []).forEach(marker => {
+        ctx.beginPath(); ctx.fillStyle = marker.color || COLORS.amber;
+        ctx.arc(map.sx(marker.x), map.sy(marker.y), 6, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = "#fff"; ctx.lineWidth = 2; ctx.stroke();
+      });
+      ctx.restore();
+      if (options.centroid && regression) {
+        ctx.fillStyle = COLORS.amber;
+        ctx.beginPath(); ctx.arc(map.sx(regression.meanX), map.sy(regression.meanY), 5, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+
+    function dataPoints() { return datos.map(point => [point.x, point.y]); }
+    function regressionFunction(x) { return regression.a0 + regression.a1 * x; }
+    function renderRouteTable() {
+      byId("routeRows").innerHTML = ruta.map((point, index) => {
+        const accumulated = point.minimo === point.maximo
+          ? (index === 0 ? "0" : `≈${point.minimo}`)
+          : `${point.minimo}–${point.maximo}`;
+        return `<tr><td>${point.lugar}</td><td>${fmtCompact(point.x, 1)} km</td><td>${point.tramo}</td><td>${accumulated} min</td></tr>`;
+      }).join("");
+    }
+
+    function renderRouteChart() {
+      const points = ruta.map(point => [point.x, (point.minimo + point.maximo) / 2]);
+      const verticals = ruta.slice(1).filter(point => point.maximo > point.minimo)
+        .map(point => ({ x: point.x, y1: point.minimo, y2: point.maximo, color: COLORS.rose }));
+      drawPlot("cvData", {
+        points, verticals, xDomain: [-0.08, 3.08], yDomain: [0, 23],
+        xlabel: "Distancia acumulada desde la salida (km)",
+        ylabel: "Tiempo acumulado estimado (min)"
+      });
+    }
+
+    function renderCompare() {
+      byId("demoDataText").textContent = `Tabla didáctica (x, y): ${datos.map(point => `(${fmtCompact(point.x)}, ${fmtCompact(point.y)})`).join(" · ")}. Estos valores no pertenecen a la ruta.`;
+      const functions = [];
+      if (compareMode === "lagrange") {
+        functions.push({ fn: calcLagrange, color: COLORS.teal, width: 3 });
+        byId("compareText").textContent = "Lagrange pasa por todos los nodos. Entre ellos su forma depende de todos los puntos.";
+      } else if (compareMode === "regression") {
+        functions.push({ fn: regressionFunction, color: COLORS.amber, width: 3 });
+        byId("compareText").textContent = `La recta ajusta la tendencia global: ŷ = ${fmt(regression.a0, 3)} + ${fmt(regression.a1, 3)}x. No tiene que pasar por cada punto.`;
+      } else {
+        byId("compareText").textContent = "Puntos del ejemplo matemático. Elige un modelo para observar la diferencia; no son observaciones del trayecto.";
+      }
+      drawPlot("cvCompare", { points: dataPoints(), functions });
+    }
+
+    function renderBasis() {
+      const functions = datos.map((_, index) => ({
+        fn: x => calcBaseLagrange(index, x),
+        color: [COLORS.indigo, COLORS.teal, COLORS.amber, COLORS.rose, "#475569"][index % 5],
+        width: basisSelection === "all" || basisSelection === String(index) ? 2.5 : 1,
+        dash: basisSelection === "all" || basisSelection === String(index) ? [] : [5, 5]
+      })).filter((_, index) => basisSelection === "all" || basisSelection === String(index));
+      drawPlot("cvBasis", { points: datos.map((point, index) => [point.x, index === Number(basisSelection) ? 1 : 0]), functions, yDomain: [-1.4, 2], xDomain: [minX() - .15, maxX() + .15], ylabel: "Valor de la base" });
+      byId("basisLegend").innerHTML = functions.map((curve, index) => `<span class="legend"><i style="background:${curve.color}"></i> L<sub>${basisSelection === "all" ? index : basisSelection}</sub>(x)</span>`).join("");
+    }
+
+    function renderLagrange() {
+      const slider = byId("lagrangeX");
+      slider.min = String(minX());
+      slider.max = String(maxX());
+      const x = Math.min(maxX(), Math.max(minX(), Number(slider.value)));
+      slider.value = String(x);
+      const value = calcLagrange(x);
+      const basis = datos.map((_, index) => calcBaseLagrange(index, x));
+      byId("lagrangeXLabel").textContent = fmt(x);
+      byId("lagrangeValue").textContent = fmt(value);
+      byId("lagrangeDegree").textContent = String(datos.length);
+      byId("basisSum").textContent = fmt(basis.reduce((sum, item) => sum + item, 0), 3);
+      byId("lagrangeRows").innerHTML = datos.map((point, index) => `<tr><td>${index}</td><td>${fmt(point.x, 2)}</td><td>${fmt(point.y, 2)}</td><td>${fmt(basis[index], 4)}</td><td>${fmt(point.y * basis[index], 4)}</td></tr>`).join("");
+      byId("lagrangePolynomial").innerHTML = `<span class="eyebrow">Polinomio expandido (coeficientes redondeados)</span><br><b>P(x) = ${polynomialText()}</b>`;
+      drawPlot("cvLagrange", { points: dataPoints(), functions: [{ fn: calcLagrange, color: COLORS.teal, width: 3 }], markers: [{ x, y: value, color: COLORS.rose }] });
+    }
+
+    function renderRegression() {
+      regression = calcRegresion();
+      byId("regressionEquation").innerHTML = `$$\\hat y=${fmt(regression.a0, 4)}+${fmt(regression.a1, 4)}x$$`;
+      drawPlot("cvRegression", { points: dataPoints(), functions: [{ fn: regressionFunction, color: COLORS.amber, width: 3 }], residuals: byId("showResiduals").checked });
+      byId("interceptValue").textContent = fmt(regression.a0, 3);
+      byId("slopeValue").textContent = fmt(regression.a1, 3);
+      byId("fitEquationShort").textContent = `ŷ = ${fmt(regression.a0, 3)} + ${fmt(regression.a1, 3)}x`;
+      byId("slopeMeaning").textContent = `${fmt(regression.a1, 2)} unidades de y por unidad de x`;
+      drawPlot("cvFit", { points: dataPoints(), functions: [{ fn: regressionFunction, color: COLORS.amber, width: 3 }], centroid: true });
+    }
+
+    function renderSums() {
+      const rows = datos.map((point, index) => `<tr><td>${index + 1}</td><td>${fmtCompact(point.x, 2)}</td><td>${fmtCompact(point.y, 2)}</td><td>${fmtCompact(point.x ** 2, 3)}</td><td>${fmtCompact(point.x * point.y, 3)}</td></tr>`).join("");
+      byId("sumsRows").innerHTML = `${rows}<tr class="total"><td>Σ</td><td>${fmtCompact(regression.sumX)}</td><td>${fmtCompact(regression.sumY)}</td><td>${fmtCompact(regression.sumX2)}</td><td>${fmtCompact(regression.sumXY)}</td></tr>`;
+      byId("calculationStep").textContent = "Presiona «Mostrar el siguiente paso» para desarrollar las sumatorias y los coeficientes.";
+      byId("nextCalculation").textContent = "Mostrar el siguiente paso";
+    }
+
+    function nextCalculationStep() {
+      calculationStep = Math.min(calculationStep + 1, 4);
+      const n = regression.n;
+      const steps = [
+        `Sumas: n = ${n}, Σx = ${fmtCompact(regression.sumX)}, Σy = ${fmtCompact(regression.sumY)}, Σx² = ${fmtCompact(regression.sumX2)}, Σxy = ${fmtCompact(regression.sumXY)}.`,
+        `Pendiente: a₁ = (${n}·${fmtCompact(regression.sumXY)} − ${fmtCompact(regression.sumX)}·${fmtCompact(regression.sumY)}) / (${n}·${fmtCompact(regression.sumX2)} − ${fmtCompact(regression.sumX)}²) = ${fmt(regression.a1, 5)}.`,
+        `Promedios del ejemplo didáctico (sin unidades físicas): x̄ = ${fmtCompact(regression.meanX)} y ȳ = ${fmtCompact(regression.meanY)}.`,
+        `Intercepto: a₀ = ȳ − a₁x̄ = ${fmtCompact(regression.meanY)} − ${fmt(regression.a1, 5)}·${fmtCompact(regression.meanX)} = ${fmt(regression.a0, 5)}. Modelo: ŷ = ${fmt(regression.a0, 4)} + ${fmt(regression.a1, 4)}x.`
+      ];
+      byId("calculationStep").textContent = steps[calculationStep - 1];
+      if (calculationStep === steps.length) byId("nextCalculation").textContent = "Reiniciar pasos";
+    }
+
+    function renderPrediction() {
+      const slider = byId("compareX");
+      const x = Number(slider.value);
+      const lagrange = calcLagrange(x);
+      const fit = regressionFunction(x);
+      byId("compareXLabel").textContent = fmt(x, 1);
+      byId("compareLagrange").textContent = fmt(lagrange);
+      byId("compareRegression").textContent = fmt(fit);
+      byId("compareDelta").textContent = fmt(Math.abs(lagrange - fit));
+      const outside = x < minX() || x > maxX();
+      byId("compareWarning").className = `notice ${outside ? "red" : "green"}`;
+      byId("compareWarning").innerHTML = outside
+        ? "<b>Extrapolación:</b> el valor queda fuera de los nodos del ejemplo didáctico; ambos modelos pueden perder validez."
+        : "<b>Dentro del intervalo del ejemplo:</b> compara las salidas matemáticas; estos valores no predicen el tiempo de tu recorrido.";
+      drawPlot("cvPrediction", {
+        points: dataPoints(), xDomain: [Math.min(minX(), 0), Math.max(maxX(), Number(slider.max))],
+        functions: [{ fn: calcLagrange, color: COLORS.teal }, { fn: regressionFunction, color: COLORS.amber }],
+        shadeOutside: true, markers: [{ x, y: lagrange, color: COLORS.teal }, { x, y: fit, color: COLORS.amber }]
+      });
+    }
+
+    function renderQuality() {
+      byId("rSquared").textContent = fmt(regression.r2, 4);
+      byId("correlation").textContent = fmt(regression.r, 4);
+      byId("standardError").textContent = fmt(regression.standardError, 3);
+      byId("residualRows").innerHTML = datos.map((point, index) => {
+        const predicted = regression.a0 + regression.a1 * point.x;
+        const error = regression.residuals[index];
+        return `<tr><td>${fmt(point.x, 2)}</td><td>${fmt(point.y, 2)}</td><td>${fmt(predicted, 3)}</td><td>${fmt(error, 3)}</td><td>${fmt(error ** 2, 4)}</td></tr>`;
+      }).join("");
+      byId("residualTotals").innerHTML = `<tr class="total"><td>Σx = ${fmt(regression.sumX, 2)}</td><td>${fmt(regression.sumY, 2)}</td><td>${fmt(regression.sumY, 2)}</td><td>≈ 0</td><td>${fmt(regression.sse, 4)}</td></tr>`;
+      drawPlot("cvResiduals", {
+        points: datos.map((point, index) => [point.x, regression.residuals[index]]),
+        xDomain: [minX() - .15, maxX() + .15], zeroLine: true, ylabel: "Residuo (unid. de y)", residualValues: regression.residuals,
+        pointColors: regression.residuals.map(value => value >= 0 ? COLORS.teal : COLORS.rose)
+      });
+    }
+
+    function geogebraCommands() {
+      const pointList = `P = {${datos.map(point => `(${Number(point.x.toFixed(5))},${Number(point.y.toFixed(5))})`).join(",")}}`;
+      return {
+        points: pointList,
+        lagrange: `${pointList}\nf = Polynomial(P)`,
+        fit: `${pointList}\ng = FitLine(P)`
+      };
+    }
+
+    function renderGeoGebraFallback() {
+      const points = dataPoints();
+      drawPlot("cvGgbFallback", { points, functions: [{ fn: calcLagrange, color: COLORS.teal }, { fn: regressionFunction, color: COLORS.amber }] });
+      const commands = geogebraCommands();
+      byId("ggbPointsCommand").textContent = commands.points;
+      byId("ggbLagrangeCommand").textContent = "f = Polynomial(P)";
+      byId("ggbFitCommand").textContent = "g = FitLine(P)";
+    }
+
+    function renderDestination() {
+      const canvas = byId("cvDestination");
+      const setup = canvasContext(canvas);
+      if (!setup) return;
+      const { context: ctx, width, height } = setup;
+      const margin = { left: 164, right: 24, top: 20, bottom: 34 };
+      const plotWidth = width - margin.left - margin.right;
+      const sx = value => margin.left + value / 30 * plotWidth;
+      ctx.clearRect(0, 0, width, height);
+      ctx.font = "11px 'DM Sans', sans-serif";
+      ctx.textAlign = "center";
+      for (let minute = 0; minute <= 30; minute += 5) {
+        const x = sx(minute);
+        ctx.strokeStyle = COLORS.grid; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(x, margin.top); ctx.lineTo(x, height - margin.bottom); ctx.stroke();
+        ctx.fillStyle = COLORS.muted; ctx.fillText(String(minute), x, height - 10);
+      }
+      ctx.fillStyle = COLORS.muted; ctx.textAlign = "center";
+      ctx.fillText("Tiempo (min)", margin.left + plotWidth / 2, height - 1);
+      const bars = [
+        { label: "Bicicleta · rango habitual", start: 17, end: 22, y: margin.top + 26, color: COLORS.indigo },
+        { label: "Suma estimada por tramos", start: 19, end: 21, y: margin.top + 82, color: COLORS.amber },
+        { label: "Hasta el salón · rango general", start: 20, end: 27, y: margin.top + 138, color: COLORS.teal }
+      ];
+      bars.forEach(bar => {
+        ctx.textAlign = "right"; ctx.fillStyle = COLORS.ink;
+        ctx.font = "600 11px 'DM Sans', sans-serif";
+        ctx.fillText(bar.label, margin.left - 10, bar.y + 4);
+        ctx.strokeStyle = bar.color; ctx.lineWidth = 12; ctx.lineCap = "round";
+        ctx.beginPath(); ctx.moveTo(sx(bar.start), bar.y); ctx.lineTo(sx(bar.end), bar.y); ctx.stroke();
+        ctx.fillStyle = bar.color;
+        [bar.start, bar.end].forEach(value => {
+          ctx.beginPath(); ctx.arc(sx(value), bar.y, 5, 0, Math.PI * 2); ctx.fill();
+        });
+        ctx.textAlign = "center"; ctx.fillStyle = COLORS.ink;
+        ctx.font = "700 10px 'DM Sans', sans-serif";
+        ctx.fillText(`${bar.start}–${bar.end} min`, (sx(bar.start) + sx(bar.end)) / 2, bar.y - 12);
+      });
+    }
+
+    function updateAll() {
+      renderRouteTable();
+      renderRegression();
+      renderCompare();
+      renderBasis();
+      renderLagrange();
+      renderSums();
+      renderPrediction();
+      renderQuality();
+      renderGeoGebraFallback();
+      renderDestination();
+      renderMath();
+    }
+
+    function renderMath() {
+      if (window.renderMathInElement) {
+        window.renderMathInElement(document.body, {
+          delimiters: [
+            { left: "$$", right: "$$", display: true },
+            { left: "\\(", right: "\\)", display: false }
+          ],
+          throwOnError: false
+        });
+      }
+    }
+
+    function goTo(index) {
+      activeSlide = Math.max(0, Math.min(slides.length - 1, index));
+      slides.forEach((slide, i) => {
+        slide.classList.toggle("active", i === activeSlide);
+        slide.setAttribute("aria-hidden", String(i !== activeSlide));
+      });
+      const title = slides[activeSlide].dataset.title || "";
+      byId("navTitle").textContent = title;
+      byId("counter").textContent = `${String(activeSlide + 1).padStart(2, "0")} / ${String(slides.length).padStart(2, "0")}`;
+      byId("progress").style.width = `${(activeSlide + 1) / slides.length * 100}%`;
+      document.querySelectorAll(".dot-btn").forEach((dot, i) => dot.setAttribute("aria-current", String(i % slides.length === activeSlide)));
+      byId("prev").disabled = activeSlide === 0;
+      byId("next").disabled = activeSlide === slides.length - 1;
+      renderMath();
+      window.clearTimeout(slideDrawTimer);
+      slideDrawTimer = window.setTimeout(redrawActiveSlide, 80);
+    }
+
+    function redrawActiveSlide() {
+      switch (activeSlide) {
+        case 0:
+          drawPlot("cvCover", { points: dataPoints(), functions: [{ fn: calcLagrange, color: COLORS.teal }, { fn: regressionFunction, color: COLORS.amber }] });
+          break;
+        case 1:
+          renderRouteChart();
+          break;
+        case 2:
+          renderCompare();
+          break;
+        case 3:
+          renderBasis();
+          break;
+        case 4:
+          renderLagrange();
+          break;
+        case 5:
+          renderRegression();
+          break;
+        case 6:
+          drawPlot("cvFit", { points: dataPoints(), functions: [{ fn: regressionFunction, color: COLORS.amber, width: 3 }], centroid: true });
+          break;
+        case 7:
+          renderPrediction();
+          break;
+        case 8:
+          renderQuality();
+          break;
+        case 9:
+          renderGeoGebraFallback();
+          break;
+        case 10:
+          renderDestination();
+          break;
+        default:
+          break;
+      }
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(error => showToast(`No se pudo activar pantalla completa: ${error.message}`));
+      } else {
+        document.exitFullscreen().catch(error => showToast(`No se pudo salir de pantalla completa: ${error.message}`));
+      }
+    }
+
+    function addGeoGebra() {
+      const script = document.createElement("script");
+      script.src = "https://www.geogebra.org/apps/deployggb.js";
+      script.async = true;
+      script.onload = () => {
+        if (!window.GGBApplet) {
+          byId("ggbStatus").textContent = "GeoGebra se descargó, pero la API no está disponible. Usa los comandos o la gráfica de respaldo.";
+          return;
+        }
+        try {
+          const applet = new window.GGBApplet({
+            appName: "classic",
+            width: 900,
+            height: 640,
+            showToolBar: false,
+            showAlgebraInput: true,
+            showMenuBar: false,
+            language: "es",
+            appletOnLoad: api => {
+              ggbApi = api;
+              byId("ggbArea").classList.add("ready");
+              byId("ggbStatus").textContent = "GeoGebra listo. Selecciona un modelo para cargar los datos actuales.";
+            }
+          }, true);
+          applet.inject("ggb");
+        } catch (error) {
+          byId("ggbStatus").textContent = `No fue posible iniciar GeoGebra: ${error.message}. Usa el respaldo local.`;
+        }
+      };
+      script.onerror = () => {
+        byId("ggbStatus").textContent = "No se pudo cargar GeoGebra (sin conexión o bloqueado). Usa los comandos y la gráfica local.";
+      };
+      document.head.appendChild(script);
+    }
+
+    function loadGeoGebra(model) {
+      if (!ggbApi) {
+        byId("ggbStatus").textContent = "El applet todavía no está disponible. Abre GeoGebra Classic y pega los comandos.";
+        return;
+      }
+      const commands = geogebraCommands();
+      try {
+        ggbApi.reset();
+        ggbApi.evalCommand(commands.points);
+        if (model === "lagrange" || model === "both") ggbApi.evalCommand("f = Polynomial(P)");
+        if (model === "fit" || model === "both") ggbApi.evalCommand("g = FitLine(P)");
+        byId("ggbStatus").textContent = `Se cargaron los puntos y el modelo ${model === "lagrange" ? "de Lagrange" : model === "fit" ? "de regresión" : "seleccionado"}.`;
+      } catch (error) {
+        byId("ggbStatus").textContent = `GeoGebra no aceptó el comando: ${error.message}. Copia los comandos manualmente.`;
+      }
+    }
+
+    function copyCommand(kind) {
+      const commands = geogebraCommands();
+      const text = commands[kind];
+      navigator.clipboard.writeText(text).then(
+        () => showToast("Comando copiado."),
+        error => showToast(`No se pudo copiar (${error.message}); selecciona y copia el comando manualmente.`)
+      );
+    }
+
+    function setupNavigation() {
+      slides.forEach((slide, index) => {
+        [byId("dots"), byId("topDots")].forEach((container, group) => {
+          const dot = document.createElement("button");
+          dot.className = "dot-btn";
+          dot.type = "button";
+          dot.setAttribute("aria-label", `Ir a la diapositiva ${index + 1}: ${slide.dataset.title}${group ? " (barra superior)" : ""}`);
+          dot.addEventListener("click", () => goTo(index));
+          container.appendChild(dot);
+        });
+      });
+      byId("prev").addEventListener("click", () => goTo(activeSlide - 1));
+      byId("next").addEventListener("click", () => goTo(activeSlide + 1));
+      byId("fullscreen").addEventListener("click", toggleFullscreen);
+      document.addEventListener("keydown", event => {
+        const target = event.target;
+        const editing = target instanceof HTMLElement && (target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName));
+        if (editing) return;
+        if (event.key === "ArrowRight" || event.key === " " || event.key === "PageDown") { event.preventDefault(); goTo(activeSlide + 1); }
+        if (event.key === "ArrowLeft" || event.key === "PageUp") { event.preventDefault(); goTo(activeSlide - 1); }
+        if (event.key.toLowerCase() === "f") toggleFullscreen();
+      });
+      document.querySelectorAll("[data-mode]").forEach(button => button.addEventListener("click", () => {
+        compareMode = button.dataset.mode;
+        renderCompare();
+      }));
+      byId("basisButtons").addEventListener("click", event => {
+        const button = event.target.closest("[data-basis]");
+        if (!button) return;
+        basisSelection = button.dataset.basis;
+        renderBasis();
+      });
+      byId("lagrangeX").addEventListener("input", renderLagrange);
+      byId("compareX").addEventListener("input", renderPrediction);
+      byId("showResiduals").addEventListener("change", renderRegression);
+      byId("nextCalculation").addEventListener("click", () => {
+        if (calculationStep === 4) {
+          calculationStep = 0;
+          byId("nextCalculation").textContent = "Mostrar el siguiente paso";
+          byId("calculationStep").textContent = "Presiona «Mostrar el siguiente paso» para desarrollar las sumatorias y los coeficientes.";
+        } else nextCalculationStep();
+      });
+      byId("ggbLoadLagrange").addEventListener("click", () => loadGeoGebra("lagrange"));
+      byId("ggbLoadFit").addEventListener("click", () => loadGeoGebra("fit"));
+      byId("ggbClear").addEventListener("click", () => {
+        if (!ggbApi) { byId("ggbStatus").textContent = "GeoGebra no está listo; no hay nada que limpiar."; return; }
+        ggbApi.reset();
+        byId("ggbStatus").textContent = "Applet limpiado.";
+      });
+      document.querySelectorAll("[data-copy]").forEach(button => button.addEventListener("click", () => copyCommand(button.dataset.copy)));
+      window.addEventListener("resize", () => {
+        if (window.resizeTimer) window.clearTimeout(window.resizeTimer);
+        window.resizeTimer = window.setTimeout(redrawActiveSlide, 120);
+      });
+    }
+
+    function initialize() {
+      byId("basisButtons").innerHTML = `<button class="btn secondary small" data-basis="all">Todas</button>${datos.map((_, index) => `<button class="btn secondary small" data-basis="${index}">L<sub>${index}</sub></button>`).join("")}`;
+      setupNavigation();
+      updateAll();
+      goTo(0);
+      addGeoGebra();
+      console.assert(datos.length === 5 && new Set(xValues()).size === datos.length, "Los datos didácticos deben tener nodos distintos.");
+      console.assert(datos.every(point => Math.abs(calcLagrange(point.x) - point.y) < 1e-10), "Lagrange debe reproducir cada nodo del ejemplo.");
+      console.assert(Math.abs(regression.residuals.reduce((sum, error) => sum + error, 0)) < 1e-9, "La suma de residuos de la regresión debe ser aproximadamente cero.");
+      console.assert(ruta.length === 6 && ruta.at(-1).x === 2.9 && ruta.at(-1).minimo === 19 && ruta.at(-1).maximo === 21, "Verifica la ruta y los acumulados estimados.");
+      console.assert(slides.length === 12, "La presentación debe contener exactamente 12 diapositivas.");
+    }
+
+    document.addEventListener("DOMContentLoaded", renderMath, { once: true });
+    initialize();
+  </script>
+</body>
+</html>

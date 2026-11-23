@@ -3,29 +3,28 @@
 ## Alcance y estado
 
 Se revisaron la entrega, el dataset, las evidencias de EDA y modelos, la
-presentación, el dashboard y el backend.
+presentación, el dashboard React integrado y los contratos de la API.
 
-- La entrega contiene una presentación autónoma de **12 diapositivas**: 9 de
-  minería de datos contando la portada y 3 de métodos numéricos.
-- Se integró el frontend React + Vite exportado desde Google AI Studio con el
-  backend FastAPI existente; FastAPI sigue siendo la única API y autoridad de
-  los datos y predicciones.
-- El `Dockerfile` compila el frontend y lo empaqueta junto con la API para
-  Cloud Run. La aplicación compilada se sirve en `/`, la presentación en
-  `/index.html` y el dashboard HTML independiente en `/dashboard.html`.
-- **No se verificó un despliegue público**. La publicación en Cloud Run requiere
-  configurar y autorizar un proyecto de Google Cloud.
-- El export de AI Studio incluyó una API Node duplicada y una copia anidada del
-  paquete; se conserva localmente como fuente original, pero se excluye del
-  despliegue. El código integrado está en `frontend/`.
-- La pantalla React consulta datos reales de FastAPI, incluye filtros,
-  comparación de modelos, predicción individual, validación CSV temporal y
-  evidencia visual local. `/stats` entrega desgloses por mes, visitante, fin de
-  semana y señal de `PageValues`.
-- Las instrucciones de mantenimiento/despliegue están en
-  [`PROMPT_MAESTRO_IA_STUDIO.md`](./PROMPT_MAESTRO_IA_STUDIO.md).
-- La carga de CSV solo valida el archivo temporalmente; no persiste, importa ni
-  reemplaza el dataset.
+- La entrega contiene una presentación autónoma de **17 diapositivas**: portada,
+  justificación de proyecto y stack, 8 de minería de datos y 7 de métodos numéricos paso a paso (`index.html`).
+- Se completó e integró el frontend web en español (`frontend/`) con dashboard de
+  KPIs y filtros reales (`/stats`), comparación verificada de modelos (`/metrics`),
+  formulario dinámico de predicción (`/schema` + `/predict`), validación temporal de
+  CSV (`/dataset/validate`), contrato de API (`/docs`) y delimitación explícita de
+  métodos pendientes/conceptuales.
+- En el entorno de ejecución de Google AI Studio Build (Node.js 22), la API y los
+  tres modelos demostrativos se adaptaron al servidor TypeScript/Express (`server.ts`,
+  `src/dataset.ts`, `src/models.ts`) conservando los contratos exactos de respuesta;
+  **probado localmente** con pruebas unitarias y navegador Chromium.
+- Se conserva el `Dockerfile` preparado para Cloud Run (publicación directa vía
+  `gcloud run deploy shoppredict --source .`), aunque **no se verificó un
+  despliegue público** en Cloud Run ni sincronización de ramas Git porque el
+  entorno no dispone de `gcloud`, proyecto GCP, facturación ni remoto `.git`.
+  El flujo principal documentado es la apertura desde Visual Studio Code o la
+  carpeta del trabajo, y después figura la sección **Opción alternativa · Acceso
+  web (entorno de desarrollo y despliegue en la nube)** en `README.md`.
+- La carga de CSV solo valida el archivo temporalmente (`persisted: false`); no
+  persiste, importa ni reemplaza el dataset.
 
 ## Dataset verificado
 
@@ -97,19 +96,6 @@ exactamente los puntos elegidos y puede oscilar fuera de ellos.
 
 ## Límites y pendientes
 
-- **Pruebas locales:** 7 pruebas FastAPI y 3 pruebas frontend pasaron;
-  `compileall` y `npm run build` también finalizaron correctamente.
-- **Smoke test local:** se comprobó en navegador y HTTP que `/` sirve el
-  dashboard React con datos reales; `/health` carga 3 modelos; `/stats` entrega
-  sus desgloses y filtra Nov/Returning_Visitor a 2.541 sesiones y 629 compras;
-  `/predict` responde; `/dataset/sample-csv` descarga datos; y la validación
-  acepta un CSV de 25 filas y rechaza uno incompleto, siempre con
-  `persisted: false`. `/index.html` mantiene las 12 diapositivas (9 de minería
-  y 3 numéricas) y `/dashboard.html` continúa disponible.
-- **Docker:** no fue posible construir la imagen porque el motor Linux de Docker
-  Desktop no está disponible en este equipo. Esto no equivale a una prueba de
-  construcción exitosa.
-- **Producción:** no se verificó una URL pública ni un despliegue en Cloud Run.
 - Naive Bayes y KNN aparecen como explicaciones metodológicas; **no tienen
   métricas calculadas** en la partición documentada.
 - K-means y clustering jerárquico no tienen resultados finales, perfiles de

@@ -46,6 +46,7 @@ interface DashboardOverviewProps {
 type KpiInspectorKey = 'dedup' | 'revenue' | 'conversion' | 'duration';
 type ModelPanelTab = 'chart' | 'matrix' | 'table';
 type ChartMetricKey = 'f1' | 'roc_auc' | 'accuracy' | 'precision' | 'recall';
+type MonthlyMetricMode = 'volume' | 'conversion' | 'duration';
 
 const CONFUSION_CELLS = [
   {
@@ -106,6 +107,7 @@ export function DashboardOverview({
 }: DashboardOverviewProps) {
   const [activeInspector, setActiveInspector] = useState<KpiInspectorKey>('dedup');
   const [hoveredMonth, setHoveredMonth] = useState<string | null>(null);
+  const [monthlyMode, setMonthlyMode] = useState<MonthlyMetricMode>('volume');
   const [hoveredSlice, setHoveredSlice] = useState<'buy' | 'no' | null>(null);
   const [hoveredModel, setHoveredModel] = useState<string | null>(null);
   const [modelTab, setModelTab] = useState<ModelPanelTab>('chart');
@@ -125,6 +127,8 @@ export function DashboardOverview({
   const averages = stats?.breakdown?.averages;
 
   const maxMonthTotal = Math.max(1, ...byMonth.map((m) => m.total));
+  const maxMonthConv = Math.max(0.01, ...byMonth.map((m) => m.conversion ?? 0));
+  const maxMonthDur = Math.max(1, ...byMonth.map((m) => m.avg_duration ?? 0));
   const hoveredMonthData =
     byMonth.find((m) => m.month === hoveredMonth) ??
     byMonth.find((m) => m.month === selectedMonth) ??
@@ -313,18 +317,28 @@ export function DashboardOverview({
           })}
         </div>
 
-        <p className="mt-2.5 text-xs text-slate-600">
-          {stats?.metrics_scope ??
-            'Los filtros actualizan KPIs y gráficas reales del CSV; las métricas de modelos corresponden al holdout global (80/20, semilla 42).'}
-        </p>
+        {/* Architecture + Prediction Method Signal Bar */}
+        <div className="mt-3 grid grid-cols-1 gap-2.5 border-t border-slate-100 pt-3 text-xs sm:grid-cols-2">
+          <div className="rounded-lg border border-indigo-200 bg-indigo-50/60 px-3 py-2 text-indigo-950">
+            <span className="font-bold">Método de predicción en Minería:</span> Random Forest (líder en F1 ={' '}
+            <span className="font-mono-tabular font-bold">0,6348</span> y ROC-AUC ={' '}
+            <span className="font-mono-tabular font-bold">0,9248</span>) contrastado frente a Árbol de Decisión y Regresión Logística.
+          </div>
+          <div className="rounded-lg border border-teal-200 bg-teal-50/60 px-3 py-2 text-teal-950">
+            <span className="font-bold">Herramientas de despliegue de datos:</span> React + Vite + Tailwind CSS + API Express (Node.js 22 / TypeScript) ejecutables desde Visual Studio Code (<code>localhost:3000</code>) o Cloud Run.
+          </div>
+        </div>
       </section>
 
       {/* Tactile Clickable 4-column KPI strip */}
       <section aria-label="Indicadores clave interactivos">
-        <div className="mb-2 flex items-center justify-between text-xs text-slate-500">
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
           <span className="inline-flex items-center gap-1.5 font-medium">
             <MousePointerClick className="h-3.5 w-3.5 text-indigo-600" aria-hidden="true" />
             Haz clic en cualquier tarjeta KPI para inspeccionar su desglose real
+          </span>
+          <span className="rounded-md bg-teal-50 px-2 py-0.5 text-[11px] font-semibold text-teal-800">
+            Datos dinámicos · Reaccionan a los filtros del CSV
           </span>
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -657,42 +671,82 @@ export function DashboardOverview({
           >
             <div className="flex flex-wrap items-start justify-between gap-2">
               <div>
-                <h2
-                  id="monthly-chart-heading"
-                  className="font-display text-lg font-semibold text-slate-900"
-                >
-                  Sesiones y conversión por mes
-                </h2>
-                <p className="mt-0.5 text-xs text-slate-600">
-                  Pasa el mouse para inspeccionar un mes o haz clic en cualquier barra para filtrar.
-                </p>
-              </div>
-              {hoveredMonthData && (
-                <div
-                  data-testid="monthly-hover-badge"
-                  className="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs text-indigo-950"
-                >
-                  <span className="font-bold">{hoveredMonthData.month}:</span>{' '}
-                  <span className="font-mono-tabular">
-                    {formatCount(hoveredMonthData.total)} ses. ·{' '}
-                    {formatCount(hoveredMonthData.purchases)} compras (
-                    {formatPercent(hoveredMonthData.conversion)})
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2
+                    id="monthly-chart-heading"
+                    className="font-display text-lg font-semibold text-slate-900"
+                  >
+                    Evolución mensual dinámica
+                  </h2>
+                  <span className="rounded bg-indigo-50 px-2 py-0.5 text-[10px] font-bold text-indigo-700">
+                    Interactivo · Clic en barra para filtrar
                   </span>
                 </div>
-              )}
+                <p className="mt-0.5 text-xs text-slate-600">
+                  Cambia la estadística mostrada o pasa el cursor sobre cualquier mes.
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-1 rounded-lg bg-slate-100 p-1">
+                {(
+                  [
+                    { id: 'volume', label: 'Sesiones' },
+                    { id: 'conversion', label: 'Conversión %' },
+                    { id: 'duration', label: 'Duración (s)' },
+                  ] as const
+                ).map((mode) => (
+                  <button
+                    key={mode.id}
+                    type="button"
+                    onClick={() => setMonthlyMode(mode.id)}
+                    className={`cursor-pointer whitespace-nowrap rounded-md px-2 py-1 text-[11px] font-semibold transition-all ${
+                      monthlyMode === mode.id
+                        ? 'bg-white text-indigo-700 shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    {mode.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            <div className="mt-4">
+            {hoveredMonthData && (
+              <div
+                data-testid="monthly-hover-badge"
+                className="mt-2.5 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs text-indigo-950"
+              >
+                <span className="font-bold">Mes inspeccionado: {hoveredMonthData.month}</span>
+                <span className="font-mono-tabular">
+                  {formatCount(hoveredMonthData.total)} ses. ·{' '}
+                  {formatCount(hoveredMonthData.purchases)} compras (
+                  {formatPercent(hoveredMonthData.conversion)}) · Prom.{' '}
+                  {formatSeconds(hoveredMonthData.avg_duration)}
+                </span>
+              </div>
+            )}
+
+            <div className="mt-3">
               <div
                 className="flex h-56 items-end gap-2 rounded-xl border border-slate-100 bg-slate-50/70 px-3 pt-6 pb-3"
                 role="list"
                 aria-label="Barras interactivas por mes"
               >
                 {byMonth.map((item) => {
-                  const totalHeightPct = Math.max(8, (item.total / maxMonthTotal) * 100);
+                  const totalHeightPct =
+                    monthlyMode === 'conversion'
+                      ? Math.max(8, ((item.conversion ?? 0) / maxMonthConv) * 100)
+                      : monthlyMode === 'duration'
+                        ? Math.max(8, ((item.avg_duration ?? 0) / maxMonthDur) * 100)
+                        : Math.max(8, (item.total / maxMonthTotal) * 100);
                   const purchaseRatio = item.total > 0 ? (item.purchases / item.total) * 100 : 0;
                   const isActive = selectedMonth === item.month;
                   const isHovered = hoveredMonth === item.month;
+                  const topLabel =
+                    monthlyMode === 'duration'
+                      ? `${Math.round(item.avg_duration ?? 0)}s`
+                      : item.conversion != null
+                        ? `${(item.conversion * 100).toFixed(0)}%`
+                        : '—';
 
                   return (
                     <button
@@ -707,10 +761,10 @@ export function DashboardOverview({
                     >
                       <span
                         className={`font-mono-tabular text-[10px] font-bold transition-opacity ${
-                          isHovered || isActive ? 'text-indigo-700 opacity-100' : 'text-slate-500 opacity-80'
+                          isHovered || isActive ? 'text-indigo-700 opacity-100' : 'text-slate-500 opacity-85'
                         }`}
                       >
-                        {item.conversion != null ? `${Math.round(item.conversion * 100)}%` : '—'}
+                        {topLabel}
                       </span>
                       <div className="relative flex h-36 w-full max-w-[44px] items-end justify-center">
                         <div
@@ -719,14 +773,20 @@ export function DashboardOverview({
                               ? 'scale-105 border-indigo-700 bg-indigo-600 shadow-md'
                               : isHovered
                                 ? '-translate-y-1 border-indigo-500 bg-indigo-500 shadow-sm'
-                                : 'border-indigo-200 bg-indigo-200/90 group-hover:bg-indigo-400'
+                                : monthlyMode === 'conversion'
+                                  ? 'border-teal-300 bg-teal-500/85 group-hover:bg-teal-600'
+                                  : monthlyMode === 'duration'
+                                    ? 'border-amber-300 bg-amber-400/90 group-hover:bg-amber-500'
+                                    : 'border-indigo-200 bg-indigo-200/90 group-hover:bg-indigo-400'
                           }`}
                           style={{ height: `${totalHeightPct}%` }}
                         >
-                          <div
-                            className="absolute inset-x-0 bottom-0 bg-teal-500 transition-all"
-                            style={{ height: `${purchaseRatio}%` }}
-                          />
+                          {monthlyMode === 'volume' && (
+                            <div
+                              className="absolute inset-x-0 bottom-0 bg-teal-500 transition-all"
+                              style={{ height: `${purchaseRatio}%` }}
+                            />
+                          )}
                         </div>
                       </div>
                       <span
@@ -744,13 +804,27 @@ export function DashboardOverview({
               <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-600">
                 <div className="flex items-center gap-4">
                   <span className="inline-flex items-center gap-1.5">
-                    <span className="h-2.5 w-2.5 rounded-xs bg-indigo-300" />
-                    Volumen total de sesiones
+                    <span
+                      className={`h-2.5 w-2.5 rounded-xs ${
+                        monthlyMode === 'conversion'
+                          ? 'bg-teal-500'
+                          : monthlyMode === 'duration'
+                            ? 'bg-amber-500'
+                            : 'bg-indigo-300'
+                      }`}
+                    />
+                    {monthlyMode === 'conversion'
+                      ? 'Tasa de conversión mensual'
+                      : monthlyMode === 'duration'
+                        ? 'Duración promedio en producto (s)'
+                        : 'Volumen total de sesiones'}
                   </span>
-                  <span className="inline-flex items-center gap-1.5">
-                    <span className="h-2.5 w-2.5 rounded-xs bg-teal-500" />
-                    Proporción con compra (Revenue)
-                  </span>
+                  {monthlyMode === 'volume' && (
+                    <span className="inline-flex items-center gap-1.5">
+                      <span className="h-2.5 w-2.5 rounded-xs bg-teal-500" />
+                      Proporción con compra (Revenue)
+                    </span>
+                  )}
                 </div>
                 {selectedMonth && (
                   <button
@@ -893,6 +967,123 @@ export function DashboardOverview({
         </div>
       )}
 
+      {/* Statistical Contrast Row: PageValues Signal & Weekend vs Averages (Live Filtered) */}
+      {total > 0 && pvSignal && averages && (
+        <section
+          aria-label="Estadísticos comparativos del filtro actual"
+          className="grid grid-cols-1 gap-4 lg:grid-cols-3"
+        >
+          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs">
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="font-display text-sm font-bold text-slate-900">
+                Señal estadística PageValues
+              </h3>
+              <span className="rounded bg-teal-50 px-1.5 py-0.5 text-[10px] font-bold text-teal-800">
+                En filtro
+              </span>
+            </div>
+            <div className="mt-3 space-y-2.5 text-xs">
+              <div>
+                <div className="flex justify-between font-semibold">
+                  <span className="text-slate-600">PageValues = 0 ({formatCount(pvSignal.zero_total)})</span>
+                  <span className="font-mono-tabular text-slate-900">
+                    {formatPercent(pvSignal.zero_conversion)}
+                  </span>
+                </div>
+                <div className="mt-1 h-2.5 w-full overflow-hidden rounded-full bg-slate-100">
+                  <div
+                    className="h-full rounded-full bg-slate-500 transition-all duration-300"
+                    style={{ width: `${(pvSignal.zero_conversion ?? 0) * 100}%` }}
+                  />
+                </div>
+              </div>
+              <div>
+                <div className="flex justify-between font-semibold">
+                  <span className="text-teal-800">PageValues &gt; 0 ({formatCount(pvSignal.positive_total)})</span>
+                  <span className="font-mono-tabular text-teal-700">
+                    {formatPercent(pvSignal.positive_conversion)}
+                  </span>
+                </div>
+                <div className="mt-1 h-2.5 w-full overflow-hidden rounded-full bg-teal-100">
+                  <div
+                    className="h-full rounded-full bg-teal-600 transition-all duration-300"
+                    style={{ width: `${(pvSignal.positive_conversion ?? 0) * 100}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs">
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="font-display text-sm font-bold text-slate-900">
+                Conversión según día (Weekend)
+              </h3>
+              <span className="rounded bg-indigo-50 px-1.5 py-0.5 text-[10px] font-bold text-indigo-700">
+                Dinámico
+              </span>
+            </div>
+            <div className="mt-3 space-y-2.5 text-xs">
+              {byWeekend.map((w) => (
+                <div key={w.label}>
+                  <div className="flex justify-between font-semibold">
+                    <span className="text-slate-700">
+                      {w.label} ({formatCount(w.total)})
+                    </span>
+                    <span className="font-mono-tabular text-indigo-700">
+                      {formatPercent(w.conversion)}
+                    </span>
+                  </div>
+                  <div className="mt-1 h-2.5 w-full overflow-hidden rounded-full bg-slate-100">
+                    <div
+                      className="h-full rounded-full bg-indigo-600 transition-all duration-300"
+                      style={{ width: `${Math.min(100, (w.conversion ?? 0) * 300)}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs">
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="font-display text-sm font-bold text-slate-900">
+                Estadísticos medios observados
+              </h3>
+              <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-bold text-amber-800">
+                Promedios reales
+              </span>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+              <div className="rounded-lg bg-slate-50 p-2">
+                <span className="text-slate-500">ProductRelated</span>
+                <p className="font-mono-tabular mt-0.5 text-base font-bold text-slate-900">
+                  {averages.product_related != null ? averages.product_related.toFixed(1) : '—'}
+                </p>
+              </div>
+              <div className="rounded-lg bg-slate-50 p-2">
+                <span className="text-slate-500">PageValues</span>
+                <p className="font-mono-tabular mt-0.5 text-base font-bold text-teal-700">
+                  {averages.page_values != null ? averages.page_values.toFixed(2) : '—'}
+                </p>
+              </div>
+              <div className="rounded-lg bg-slate-50 p-2">
+                <span className="text-slate-500">BounceRates</span>
+                <p className="font-mono-tabular mt-0.5 text-base font-bold text-slate-900">
+                  {averages.bounce_rate != null ? averages.bounce_rate.toFixed(4) : '—'}
+                </p>
+              </div>
+              <div className="rounded-lg bg-slate-50 p-2">
+                <span className="text-slate-500">ExitRates</span>
+                <p className="font-mono-tabular mt-0.5 text-base font-bold text-slate-900">
+                  {averages.exit_rate != null ? averages.exit_rate.toFixed(4) : '—'}
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Interactive Model Comparison + Confusion Matrix Section */}
       <section
         aria-labelledby="models-heading"
@@ -900,7 +1091,7 @@ export function DashboardOverview({
       >
         <div className="flex flex-col justify-between gap-3 border-b border-slate-100 pb-4 sm:flex-row sm:items-center">
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <BarChart3 className="h-5 w-5 text-indigo-600" aria-hidden="true" />
               <h2
                 id="models-heading"
@@ -908,6 +1099,9 @@ export function DashboardOverview({
               >
                 Evaluación comparativa de modelos supervisados
               </h2>
+              <span className="rounded bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-700">
+                Holdout fijo 80/20 · No cambia con filtros
+              </span>
             </div>
             <p className="mt-1 text-xs text-slate-600">
               Partición estratificada 80/20 (semilla 42: 9.764 entrenamiento / 2.441 prueba). Métricas globales fijas; explora barras, matriz de confusión de Random Forest o tabla completa.

@@ -1,0 +1,69 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "ShopPredict: 1. Instalar dependencias (npm install)",
+      "type": "shell",
+      "command": "npm install",
+      "problemMatcher": []
+    },
+    {
+      "label": "ShopPredict: 2. Ejecutar pruebas unitarias",
+      "type": "shell",
+      "command": "npm test",
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "ShopPredict: 3. Compilar Frontend y Backend",
+      "type": "shell",
+      "command": "npm run build",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "ShopPredict: Verificar tipos (lint)",
+      "type": "shell",
+      "command": "npm run lint",
+      "problemMatcher": []
+    },
+    {
+      "label": "ShopPredict: 4. Iniciar servidor local (puerto 3000)",
+      "type": "shell",
+      "command": "npm run dev",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "ShopPredict: Abrir en Microsoft Edge (Windows)",
+      "type": "shell",
+      "windows": {
+        "command": "start msedge \"http://localhost:3000/index.html\" \"http://localhost:3000/\""
+      },
+      "osx": {
+        "command": "open -a \"Microsoft Edge\" \"http://localhost:3000/index.html\" \"http://localhost:3000/\""
+      },
+      "linux": {
+        "command": "xdg-open \"http://localhost:3000/index.html\""
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "ShopPredict: Empaquetar ZIP limpio para entrega",
+      "type": "shell",
+      "windows": {
+        "command": "powershell -NoProfile -Command \"$items = Get-ChildItem -Force | Where-Object { $_.Name -notin @('node_modules','.git','.playwright-cli','Entregable_Final_ShopPredict_Entrega.zip') }; Compress-Archive -Path $items.FullName -DestinationPath 'ShopPredict_Entrega_Final.zip' -Force; Write-Host 'ZIP generado: ShopPredict_Entrega_Final.zip'\""
+      },
+      "linux": {
+        "command": "zip -r ShopPredict_Entrega_Final.zip . -x 'node_modules/*' '.git/*' '.playwright-cli/*' '*.zip'"
+      },
+      "problemMatcher": []
+    }
+  ]
+}

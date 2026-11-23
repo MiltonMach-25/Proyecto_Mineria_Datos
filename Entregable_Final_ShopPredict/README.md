@@ -3,53 +3,47 @@
 Entrega final del proyecto de Minería de Datos y Métodos Numéricos.
 
 **Repositorio:** [Proyecto_Mineria_Datos](https://github.com/MiltonMach-25/Proyecto_Mineria_Datos)
-
 **Equipo:** Milton Cesar Machado Barreto · Raúl Andrés Triana Ortega · Santiago Molina Maldonado
 **Institución:** UNIMINUTO · Ingeniería de Sistemas · 2026
 
+> **Modo principal de apertura:** desde **Visual Studio Code** o directamente desde la **carpeta del proyecto** (`index.html` o `http://localhost:3000`).  
+> **Opción alternativa en la web (entorno de desarrollo y nube):** disponible más abajo en la sección [`Opción alternativa · Acceso web (entorno de desarrollo y despliegue en la nube)`](#opción-alternativa--acceso-web-entorno-de-desarrollo-y-despliegue-en-la-nube).
+
 ## Estado real de la entrega
 
-- Incluye dataset, presentación HTML autónoma de 12 diapositivas, dashboard y API FastAPI.
-- El backend está preparado para ejecutarse localmente y construirse como imagen Docker para Cloud Run.
-- El frontend React + Vite exportado desde Google AI Studio ya está integrado con la API FastAPI; FastAPI sigue siendo el único backend.
-- La imagen Docker compila el frontend y lo sirve junto con el backend. La presentación se conserva en `/index.html` y el dashboard HTML independiente en `/dashboard.html`.
-- No se afirma que la aplicación esté desplegada públicamente. La publicación en Cloud Run requiere configurar el proyecto y ejecutar los pasos de despliegue.
-- La validación de CSV es temporal y no persiste ni reemplaza datos.
+- Incluye dataset (`data/online_shoppers_intention.csv`), presentación HTML autónoma de 17 diapositivas (`index.html`), dashboard React + Vite + Tailwind CSS compilado (`frontend/` → `dist/`), respaldo estático (`dashboard.html`) y servidor API con rutas `/health`, `/metadata`, `/stats`, `/metrics`, `/schema`, `/predict`, `/dataset/validate`, `/dataset/sample-csv` y `/docs`.
+- **Probado localmente en este entorno (Node.js 22 / Express / TypeScript):** el frontend y la API se compilaron, probaron con pruebas unitarias (`node:test`) y verificaron en navegador real con Playwright sobre `http://127.0.0.1:3000`.
+- **Preparado para Google Cloud Run (sin depender de Visual Studio Code):** se conserva el `Dockerfile` para publicar todo (frontend + API + presentación) y entregar únicamente el enlace web al profesor/jurado.
+- **No desplegado en producción desde este contenedor:** en este sandbox no existe `gcloud` CLI ni credenciales/proyecto de Google Cloud ni repositorio Git remoto adjunto. Por lo tanto, no se afirma ninguna URL pública de producción.
+- La validación de CSV es temporal (`persisted: false`) y no persiste ni reemplaza datos.
 
 ## Arquitectura objetivo
 
 ```text
 GitHub (código y dataset)
         ↓
-Frontend React + Vite (integrado, mismo origen)
+Frontend React + Vite + Tailwind (integrado en frontend/ y compilado a dist/)
         ↓
-FastAPI + scikit-learn (API única)
+API REST (/health, /metadata, /stats, /metrics, /schema, /predict, /dataset/validate, /docs)
         ↓
-Google Cloud Run (despliegue pendiente)
+Google Cloud Run (pendiente de despliegue manual con gcloud y permisos de proyecto)
 ```
 
-El servidor FastAPI sirve el frontend compilado en `/`, la presentación en
-`/index.html`, el dashboard HTML independiente en `/dashboard.html` y la
-documentación de la API en `/docs`. El directorio `proyecto_final_shoppredict/`
-es el export de trabajo local de AI Studio: su copia completa y su backend Node
-duplicado no forman parte del despliegue; el frontend integrado está en
-`frontend/`. No se requieren claves para la ejecución local ni hay bases de
-datos externas.
+La API también sirve el dashboard compilado en `/`, la presentación de 17 diapositivas en `/index.html` y la documentación de contrato en `/docs`. No se requieren claves para la ejecución local. No hay integración activa con bases de datos externas.
 
 ## Contenido
 
 | Ruta | Propósito |
 |---|---|
-| `frontend/` | Aplicación React + Vite + Tailwind CSS, compilada por Docker y servida por FastAPI. |
-| `index.html` | Presentación final: 9 diapositivas de minería, incluida la portada, y 3 de métodos numéricos. |
-| `dashboard.html` | KPIs, métricas verificadas y validación temporal de archivos CSV. |
-| `backend/` | API FastAPI, preparación de datos y modelos de clasificación. |
-| `data/online_shoppers_intention.csv` | Dataset de entrada original. |
-| `assets/evidencias/` | EDA, métricas y visualizaciones del proyecto. |
+| `frontend/` | Aplicación web moderna en React + Vite + Tailwind CSS v4 (se compila a `dist/`). |
+| `dashboard.html` | Dashboard HTML autónomo equivalente (compatible directamente con FastAPI sin compilación adicional). |
+| `index.html` | Presentación final (17 láminas): portada, justificación proyecto/stack vs. Vercel, 8 de minería y 7 de métodos numéricos paso a paso con preguntas de jurado. |
+| `data/online_shoppers_intention.csv` | Dataset de entrada original (`12.330` filas, `18` columnas). |
+| `assets/evidencias/` | EDA, métricas verificadas (`metricas_modelos.csv`) y visualizaciones del proyecto. |
 | `AUDITORIA.md` | Alcance, resultados verificados, limitaciones y pendientes. |
-| `GUION_SUSTENTACION_FINAL.md` | Guion de exposición y recorrido de demostración en vivo. |
-| `PROMPT_MAESTRO_IA_STUDIO.md` | Instrucciones de mantenimiento y despliegue del paquete integrado. |
-| `docs/` | Material académico complementario; las guías internas se conservaron con nombres distintos para evitar README duplicados. |
+| `GUION_SUSTENTACION_FINAL.md` | Guion ejecutivo para la sustentación ante jurado y demo en vivo. |
+| `PROMPT_MAESTRO_IA_STUDIO.md` | Instrucción utilizada para generar e integrar el frontend. |
+| `docs/` | Material académico complementario. |
 
 ## Datos y resultados documentados
 
@@ -76,11 +70,42 @@ La presentación relaciona `ProductRelated` con `ProductRelated_Duration` para
 explicar regresión lineal e interpolación de Lagrange. Las cifras y el método
 se detallan en la auditoría.
 
-## Ejecutar localmente en Windows
+## 1. Ejecución principal · Abrir desde Visual Studio Code o la carpeta del trabajo
 
-Abre dos terminales desde esta carpeta (`Entregable_Final_ShopPredict`).
+El proyecto está configurado para ejecutarse principalmente en local desde la propia carpeta o en **Visual Studio Code**:
 
-**Terminal 1 — API FastAPI:**
+- **Presentación directa desde la carpeta:** haz doble clic en `Entregable_Final_ShopPredict/index.html` para abrir las 17 diapositivas con evidencias, justificaciones y gráficos interactivos sin iniciar servidor.
+- **Aplicación completa en VS Code (`.vscode/` listo para usar con `F5`):**
+
+### Opción A: Paquete exportado completo (Node.js 22 + React · recomendado)
+
+Abre la carpeta raíz del proyecto en Visual Studio Code y presiona `F5` (o ejecuta en la terminal):
+
+```bash
+npm install
+npm test
+npm run build
+npm run dev
+```
+
+Abre en el navegador:
+- **Dashboard interactivo:** `http://localhost:3000/` (o `http://localhost:3000/dashboard.html`)
+- **Presentación (17 diapositivas):** `http://localhost:3000/index.html`
+- **Control y contrato de API:** `http://localhost:3000/docs` (`OpenAPI JSON` en `/openapi.json`)
+
+Para probar el contenedor Docker en local desde la raíz:
+
+```bash
+docker build -t shoppredict .
+docker run -p 8080:8080 shoppredict
+```
+
+### Opción B: Integrar en el repositorio GitHub con el backend Python FastAPI
+
+Si conservas `backend/` (FastAPI + scikit-learn) en `MiltonMach-25/Proyecto_Mineria_Datos`:
+
+1. Copia dentro de `Entregable_Final_ShopPredict/` las carpetas y archivos actualizados (`frontend/`, `dist/`, `dashboard.html`, `README.md`, `AUDITORIA.md`, `GUION_SUSTENTACION_FINAL.md`) **sin borrar** `backend/` ni el `Dockerfile` de Python.
+2. En PowerShell (desde `Entregable_Final_ShopPredict/`):
 
 ```powershell
 py -m venv .venv
@@ -89,28 +114,12 @@ python -m pip install -r backend\requirements.txt
 python -m uvicorn backend.api_shoppredict:app --reload --host 127.0.0.1 --port 8080
 ```
 
-**Terminal 2 — frontend de desarrollo:**
+3. Abre:
+   - Presentación: `http://127.0.0.1:8080/`
+   - Dashboard completo: `http://127.0.0.1:8080/dashboard.html`
+   - Documentación interactiva de la API: `http://127.0.0.1:8080/docs`
 
-```powershell
-Push-Location frontend
-npm ci
-npm test
-npm run dev
-```
-
-El servidor Vite en `http://127.0.0.1:5173` reenvía las peticiones API a
-FastAPI en el puerto `8080`. Para probar la versión compilada servida por
-FastAPI, ejecuta `npm run build` desde `frontend/` y abre:
-
-- Dashboard React compilado: `http://127.0.0.1:8080/`
-- Presentación: `http://127.0.0.1:8080/index.html`
-- Dashboard: `http://127.0.0.1:8080/dashboard.html`
-- Documentación interactiva de la API: `http://127.0.0.1:8080/docs`
-
-La API entrena los tres modelos disponibles al iniciar; el arranque puede tardar
-unos segundos. Para usar otro CSV como dataset principal, define
-`SHOPPREDICT_DATASET` antes de iniciar el servidor. El archivo debe incluir las
-18 columnas originales requeridas.
+La API entrena los tres modelos disponibles al iniciar. Para usar otro CSV como dataset principal, define `SHOPPREDICT_DATASET` antes de iniciar el servidor.
 
 ## API disponible
 
@@ -119,11 +128,10 @@ unos segundos. Para usar otro CSV como dataset principal, define
 | `GET /health` | Estado del servicio y cantidad de modelos cargados. |
 | `GET /metadata` | Archivo, filas usadas, duplicados y procedencia del dataset. |
 | `GET /schema` | Variables de entrada, tipos y modelos disponibles. |
-| `GET /stats?month=...&visitor_type=...` | KPIs y desgloses de gráficos filtrados por mes/visitante; las métricas de modelos siguen siendo globales. |
+| `GET /stats?month=...&visitor_type=...` | KPIs filtrados por mes/visitante; las métricas de modelos siguen siendo globales. |
 | `GET /metrics` | Métricas guardadas de la partición documentada. |
 | `POST /predict` | Predicción individual con Árbol, Random Forest o Regresión Logística. |
 | `POST /dataset/validate` | Valida un CSV temporal de hasta 10 MB; no lo importa ni persiste. |
-| `GET /dataset/sample-csv` | Descarga una muestra basada en filas reales del dataset; no persiste datos. |
 
 La inferencia de demostración se entrena con las filas etiquetadas disponibles al
 iniciar el servicio. Las métricas mostradas en el dashboard se leen del archivo
@@ -137,18 +145,47 @@ Desde la carpeta de la entrega:
 ```powershell
 python -m unittest discover -s backend\tests -v
 python -m compileall -q backend
-Push-Location frontend
-npm ci
-npm test
-npm run build
-Pop-Location
 ```
 
-## Preparar el despliegue en Google Cloud Run
+## Opción alternativa · Acceso web (entorno de desarrollo y despliegue en la nube)
 
-Requiere una cuenta de Google Cloud con facturación y permisos para Cloud Build,
-Artifact Registry y Cloud Run. Sustituye los valores de ejemplo por los de tu
-proyecto y región; no guardes credenciales en el repositorio.
+Además de la ejecución principal desde Visual Studio Code o la carpeta del trabajo, puedes acceder a la aplicación en la web mediante estas dos vías alternativas:
+
+### 1) Acceso web del entorno de desarrollo (Google AI Studio)
+
+> **Entorno de desarrollo (`dev`):** https://ais-dev-qoly54eogadnudoldqzznt-513240885441.us-west1.run.app  
+> **Vista previa compartida (`preview`):** https://ais-pre-qoly54eogadnudoldqzznt-513240885441.us-west1.run.app  
+> *Nota:* enlaces correspondientes al **entorno de desarrollo y vista previa en Google AI Studio** donde se compiló y verificó la entrega (requieren acceso del entorno AI Studio; se mantienen como opción alternativa de acceso web).
+
+| Vista / Recurso | Ruta web (local o entorno de desarrollo) | Qué permite demostrar |
+|---|---|---|
+| **Aplicación web (Dashboard)** | `/` o `/dashboard.html` | KPIs reales interactivos, gráficas por mes/visitante, matriz de confusión, predicción en 3 modelos, curva de sensibilidad e invalidación de CSV |
+| **Presentación final (17 láminas)** | `/index.html` | Sustentación completa de contexto/Minería (10 láminas) + Métodos Numéricos paso a paso (7 láminas) con preguntas de jurado y retorno `← Volver al Dashboard` |
+| **Control interactivo de API** | `/docs` | Prueba directa en navegador de `/health`, `/stats`, `/metrics`, `/schema`, `/predict` y `/dataset/validate` |
+| **Contrato OpenAPI JSON** | `/openapi.json` | Especificación de endpoints activos |
+
+### 2) Publicación pública propia en Google Cloud Run (sin depender de Visual Studio Code)
+
+> **Enlace público permanente (Cloud Run propio):** `PENDIENTE_DE_PUBLICACION` — *Al desplegar desde tu cuenta con `gcloud run deploy shoppredict --source .`, sustituye este texto por tu URL permanente `https://shoppredict-xxxxx.a.run.app`.*
+
+Una vez subido todo a GitHub, puedes publicar la aplicación en la nube para que el profesor y el jurado entren **únicamente con el enlace web**, sin instalar nada ni abrir Visual Studio Code.
+
+Requiere una cuenta de Google Cloud con facturación y permisos para Cloud Build y Cloud Run (no guardes credenciales en el repositorio):
+
+#### Opción rápida (desde la raíz exportada con Node.js / React + API integrados)
+
+```bash
+gcloud auth login
+gcloud config set project TU_PROJECT_ID
+gcloud run deploy shoppredict \
+  --source . \
+  --region us-central1 \
+  --allow-unauthenticated
+```
+
+Al terminar, Google Cloud imprimirá tu enlace público (`Service URL: https://shoppredict-....a.run.app`). Pega ese enlace en este apartado y en el `README.md` raíz antes de la entrega final.
+
+#### Opción con backend Python FastAPI (dentro de `Entregable_Final_ShopPredict/` si conservaste `backend/`)
 
 ```powershell
 gcloud auth login
@@ -159,24 +196,18 @@ gcloud run deploy shoppredict-api `
   --image REGION-docker.pkg.dev/PROJECT_ID/REPOSITORY/shoppredict-api:latest `
   --region REGION `
   --port 8080 `
-  --set-env-vars SHOPPREDICT_DATASET=/app/data/online_shoppers_intention.csv
+  --set-env-vars SHOPPREDICT_DATASET=/app/data/online_shoppers_intention.csv `
+  --allow-unauthenticated
 ```
 
-Si el frontend se aloja en un origen distinto, agrega ese origen a
-`FRONTEND_ORIGINS` como variable del servicio Cloud Run. El acceso público y la
-autenticación deben decidirse en la configuración del servicio; no se habilita
-acceso público automáticamente en esta guía. Si se decide publicar un demo con
-este dataset público, agrega `--allow-unauthenticated` al comando de despliegue.
-Después del despliegue, comprueba `/health`, `/stats`, `/docs` y una predicción
-real antes de presentar la URL como funcional.
+Después del despliegue, comprueba `/health`, `/stats`, `/docs`, una predicción real y la invalidación de CSV antes de compartir la URL como enlace definitivo.
 
 ## Presentación
 
-Abre `index.html` directamente en un navegador o usa la ruta
-`/index.html` del backend. El dashboard principal está en `/`.
+Abre `index.html` directamente en un navegador o usa la ruta `/` del backend.
 El HTML incluye sus diagramas y gráficos; sus imágenes locales están dentro de
-`assets/`. La portada y ocho diapositivas restantes cubren minería de datos;
-las tres últimas explican regresión lineal, Lagrange y su diferencia. Los
+`assets/`. La portada, justificación del proyecto/stack y ocho diapositivas siguientes cubren minería de datos;
+las siete últimas explican paso a paso planteamiento, sumatorias, regresión lineal, residuos, Lagrange, pesos, comparación final y respuestas rápidas para el jurado. Los
 diagramas de árbol y dendrograma son esquemas conceptuales, no resultados
 calculados con ShopPredict.
 
@@ -185,5 +216,4 @@ calculados con ShopPredict.
 - [`AUDITORIA.md`](./AUDITORIA.md): auditoría técnica y académica.
 - [`PROMPT_MAESTRO_IA_STUDIO.md`](./PROMPT_MAESTRO_IA_STUDIO.md): prompt vigente para AI Studio.
 - Las guías y archivos de contexto en `docs/` son material complementario. Este
-  es el único `README.md` versionado en el paquete final. La copia original del
-  export está ignorada por Git y no se publica como una segunda entrega.
+  es el único archivo llamado `README.md` dentro de la entrega.
