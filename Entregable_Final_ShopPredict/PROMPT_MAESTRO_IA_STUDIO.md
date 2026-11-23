@@ -1,8 +1,10 @@
 # Instrucción para Google AI Studio Build
 
-Conecta primero el repositorio `MiltonMach-25/Proyecto_Mineria_Datos`. Después
-copia y ejecuta la instrucción siguiente en Google AI Studio Build. Trabaja
-únicamente sobre `Entregable_Final_ShopPredict/` y conserva los avances actuales.
+El frontend generado en Google AI Studio ya se integró en
+`Entregable_Final_ShopPredict/frontend/`. Conecta el repositorio
+`MiltonMach-25/Proyecto_Mineria_Datos` y usa la instrucción siguiente solo para
+revisar, probar y completar el despliegue. Trabaja únicamente sobre
+`Entregable_Final_ShopPredict/` y conserva los avances actuales.
 
 ---
 
@@ -26,23 +28,27 @@ es la aplicación web y su API funcionando.
    `AUDITORIA.md` y este archivo.
 3. Inspecciona `backend/api_shoppredict.py`,
    `backend/shoppredict_model.py`, `backend/requirements.txt`, `Dockerfile`,
-   `dashboard.html`, `index.html`, `data/online_shoppers_intention.csv` y
+   `frontend/`, `dashboard.html`, `index.html`,
+   `data/online_shoppers_intention.csv` y
    `assets/evidencias/metricas_modelos.csv`.
 4. Ejecuta las pruebas existentes antes de editar. Mantén los archivos
    académicos; no reconstruyas el proyecto desde cero.
+5. Usa `frontend/` como el frontend React ya integrado. No copies el export
+   anidado `proyecto_final_shoppredict/` ni agregues su servidor Express/Node:
+   FastAPI es el backend único del proyecto.
 
 ### 2. Arquitectura requerida
 
-- **Frontend:** construye o completa un dashboard moderno, responsive, accesible
-  y en español. Puede ser una aplicación compilada a archivos estáticos.
+- **Frontend:** conserva y completa el dashboard React + Vite ya integrado en
+  `frontend/`; debe ser moderno, responsive, accesible y en español.
 - **Backend:** conserva FastAPI y scikit-learn como autoridad para los datos,
   validaciones y predicciones. No reimplementes los modelos en el navegador.
 - **Datos:** usa el CSV versionado en `data/` como fuente inicial. La API y el
   frontend deben mostrar estados reales de carga, error y ausencia de datos.
-- **Producción:** intenta integrar frontend y API en un servicio de Cloud Run
-  usando el `Dockerfile` existente. Si la plataforma requiere servicios
-  separados, despliega frontend y API en servicios Cloud Run y configura
-  correctamente `FRONTEND_ORIGINS`.
+- **Producción:** compila el frontend con el `Dockerfile` y sirve frontend y
+  FastAPI desde el mismo servicio Cloud Run y origen. Mantén `/` para el
+  dashboard, `/index.html` para la presentación y `/dashboard.html` como
+  alternativa HTML.
 - No añadas una base de datos, persistencia de cargas ni servicios externos que
   no estén configurados y probados. La validación de CSV actual es temporal y no
   guarda ni importa archivos.
@@ -94,8 +100,9 @@ es la aplicación web y su API funcionando.
 
 ### 5. Despliegue de producción: obligación y comprobación
 
-1. Construye el frontend y el contenedor desde el código del repositorio.
-2. Despliega la API y el frontend funcional en Google Cloud Run, usando el
+1. Ejecuta `npm ci`, las pruebas y la compilación dentro de `frontend/`;
+   después construye el contenedor desde el repositorio.
+2. Despliega la API y el frontend funcional en un servicio de Google Cloud Run, usando el
    proyecto y la región que autorice el usuario.
 3. Si la aplicación debe ser pública para que el jurado la vea, configura el
    acceso únicamente cuando el propietario del proyecto lo autorice y no existan
@@ -116,6 +123,8 @@ es la aplicación web y su API funcionando.
 
 - Conserva los contratos actuales de API; cualquier cambio debe actualizar
   frontend, backend, pruebas, README y auditoría.
+- Mantén `/`, `/index.html`, `/dashboard.html`, `/docs` y las rutas de API
+  funcionando. La entrega conserva una sola implementación backend: FastAPI.
 - Ejecuta las pruebas, compilación y verificaciones disponibles antes de
   publicar.
 - No sobrescribas ni reescribas el historial de Git. Resume los cambios y

@@ -11,7 +11,7 @@ from typing import Any, Literal
 import pandas as pd
 from fastapi import FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from pydantic import BaseModel, ConfigDict, Field
 from starlette.staticfiles import StaticFiles
 
@@ -29,6 +29,7 @@ PROJECT_DIR = Path(__file__).resolve().parent
 PACKAGE_DIR = PROJECT_DIR.parent
 DEFAULT_DATASET = PACKAGE_DIR / "data" / "online_shoppers_intention.csv"
 METRICS_FILE = PACKAGE_DIR / "assets" / "evidencias" / "metricas_modelos.csv"
+FRONTEND_DIST = PACKAGE_DIR / "frontend" / "dist"
 MAX_UPLOAD_BYTES = 10 * 1024 * 1024
 EXPECTED_COLUMNS = [
     "Administrative",
@@ -263,6 +264,130 @@ def metadata(request: Request) -> dict[str, Any]:
     return request.app.state.dataset_metadata
 
 
+def _summarize_group(features: pd.DataFrame, target: pd.Series) -> dict[str, Any]:
+    total = len(target)
+    purchases = int(target.sum())
+    duration = (
+        pd.to_numeric(features["ProductRelated_Duration"], errors="coerce")
+        if "ProductRelated_Duration" in features
+        else pd.Series(dtype=float)
+    )
+    return {
+        "total": total,
+        "purchases": purchases,
+        "conversion": purchases / total if total else None,
+        "avg_duration": float(duration.mean()) if duration.notna().any() else None,
+    }
+
+
+def _group_breakdown(
+    features: pd.DataFrame,
+    target: pd.Series,
+    column: str,
+    label_key: str,
+) -> list[dict[str, Any]]:
+    if column not in features:
+        return []
+
+    frame = features.copy()
+    frame["_Revenue"] = target.to_numpy()
+    result = []
+    for value, group in frame.groupby(column, dropna=False, sort=False):
+        label = "Sin dato" if pd.isna(value) else str(value)
+        item = {
+            label_key: label,
+            **_summarize_group(group, group["_Revenue"].astype(bool)),
+        }
+        result.append(item)
+    return result
+
+
+def _build_stats_breakdown(
+    features: pd.DataFrame, target: pd.Series
+) -> dict[str, Any]:
+    month_order = {
+        month: index
+        for index, month in enumerate(
+            [
+                "Jan",
+                "Feb",
+                "Mar",
+                "Apr",
+                "May",
+                "June",
+                "Jul",
+                "Aug",
+                "Sep",
+                "Oct",
+                "Nov",
+                "Dec",
+            ]
+        )
+    }
+    by_month = _group_breakdown(features, target, "Month", "month")
+    by_month.sort(
+        key=lambda item: (
+            month_order.get(item["month"], len(month_order)),
+            item["month"],
+        )
+    )
+
+    by_visitor = _group_breakdown(features, target, "VisitorType", "visitor_type")
+    by_visitor.sort(key=lambda item: item["visitor_type"])
+
+    by_weekend = _group_breakdown(features, target, "Weekend", "weekend")
+    for item in by_weekend:
+        item["weekend"] = str(item["weekend"]).strip().lower() in {"true", "1"}
+        item["label"] = "Fin de semana" if item["weekend"] else "Entre semana"
+    by_weekend.sort(key=lambda item: item["weekend"])
+
+    page_values = (
+        pd.to_numeric(features["PageValues"], errors="coerce")
+        if "PageValues" in features
+        else pd.Series(index=features.index, dtype=float)
+    )
+    zero_mask = page_values.eq(0).fillna(False)
+    positive_mask = page_values.gt(0).fillna(False)
+
+    def summarize_signal(mask: pd.Series) -> dict[str, Any]:
+        selected = target.loc[mask]
+        total = len(selected)
+        purchases = int(selected.sum())
+        return {
+            "total": total,
+            "purchases": purchases,
+            "conversion": purchases / total if total else None,
+        }
+
+    def average(column: str) -> float | None:
+        if column not in features:
+            return None
+        values = pd.to_numeric(features[column], errors="coerce")
+        return float(values.mean()) if values.notna().any() else None
+
+    zero_summary = summarize_signal(zero_mask)
+    positive_summary = summarize_signal(positive_mask)
+    return {
+        "by_month": by_month,
+        "by_visitor": by_visitor,
+        "by_weekend": by_weekend,
+        "page_values_signal": {
+            "zero_total": zero_summary["total"],
+            "zero_purchases": zero_summary["purchases"],
+            "zero_conversion": zero_summary["conversion"],
+            "positive_total": positive_summary["total"],
+            "positive_purchases": positive_summary["purchases"],
+            "positive_conversion": positive_summary["conversion"],
+        },
+        "averages": {
+            "page_values": average("PageValues"),
+            "bounce_rate": average("BounceRates"),
+            "exit_rate": average("ExitRates"),
+            "product_related": average("ProductRelated"),
+        },
+    }
+
+
 @app.get("/stats")
 def stats(
     request: Request,
@@ -303,7 +428,26 @@ def stats(
         "filters": {"month": month, "visitor_type": visitor_type},
         "metrics_scope": "Métricas de modelos: holdout global documentado, sin filtros.",
         "models": request.app.state.model_metrics,
+        "breakdown": _build_stats_breakdown(filtered_features, filtered_target),
     }
+
+
+@app.get("/dataset/sample-csv", include_in_schema=False)
+def sample_csv(request: Request) -> Response:
+    features = request.app.state.features
+    target = request.app.state.target
+    purchase_indexes = target[target].index[:10]
+    non_purchase_indexes = target[~target].index[:15]
+    indexes = purchase_indexes.append(non_purchase_indexes)
+    sample = features.loc[indexes].copy()
+    sample[TARGET] = target.loc[indexes].to_numpy()
+    return Response(
+        content=sample.to_csv(index=False),
+        media_type="text/csv",
+        headers={
+            "Content-Disposition": 'attachment; filename="shoppredict_muestra_valida.csv"'
+        },
+    )
 
 
 @app.get("/metrics")
@@ -410,13 +554,29 @@ def predict(payload: PredictionRequest, request: Request) -> PredictionResponse:
 
 
 @app.get("/", include_in_schema=False)
+def dashboard() -> FileResponse:
+    frontend_index = FRONTEND_DIST / "index.html"
+    if frontend_index.is_file():
+        return FileResponse(frontend_index)
+    return FileResponse(PACKAGE_DIR / "dashboard.html")
+
+
+@app.get("/dashboard.html", include_in_schema=False)
+def standalone_dashboard() -> FileResponse:
+    return FileResponse(PACKAGE_DIR / "dashboard.html")
+
+
+@app.get("/index.html", include_in_schema=False)
 def presentation() -> FileResponse:
     return FileResponse(PACKAGE_DIR / "index.html")
 
 
-@app.get("/dashboard.html", include_in_schema=False)
-def dashboard() -> FileResponse:
-    return FileResponse(PACKAGE_DIR / "dashboard.html")
+if (FRONTEND_DIST / "dashboard-assets").is_dir():
+    app.mount(
+        "/dashboard-assets",
+        StaticFiles(directory=FRONTEND_DIST / "dashboard-assets"),
+        name="dashboard-assets",
+    )
 
 
 app.mount(
