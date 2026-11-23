@@ -32,7 +32,7 @@ COLOR_PLOT = "#020617"
 class ShopPredictApp:
     def __init__(self, root: tk.Tk) -> None:
         self.root = root
-        self.root.title("ShopPredict AI | Minería de Datos")
+        self.root.title("ShopPredict | Minería de Datos")
         self.root.geometry("1120x790")
         self.root.minsize(920, 680)
         self.root.configure(bg=COLOR_BG)
@@ -47,7 +47,7 @@ class ShopPredictApp:
         self.create_widgets()
         self.root.after(100, self.process_events)
         self.log(
-            "ShopPredict AI listo. Carga el dataset para explorar los datos y "
+            "ShopPredict listo. Carga el dataset para explorar los datos y "
             "ejecutar el proceso reproducible."
         )
         if DEFAULT_DATASET.exists():
@@ -95,7 +95,7 @@ class ShopPredictApp:
         header.pack(fill=tk.X)
         tk.Label(
             header,
-            text="🛒 ShopPredict AI",
+            text="🛒 ShopPredict",
             font=("Segoe UI", 23, "bold"),
             fg=COLOR_PRIMARY,
             bg=COLOR_FRAME,
@@ -680,7 +680,7 @@ class ShopPredictApp:
             return
         data = self.df
         text = [
-            "# ShopPredict AI — Informe de ejecución",
+            "# ShopPredict — Informe de ejecución",
             "",
             f"Fecha: {datetime.now().astimezone().strftime('%Y-%m-%d %H:%M %Z')}",
             "",
@@ -877,7 +877,7 @@ class ShopPredictApp:
             rate_axis.set_title(f"Tasa de compra según {category}")
             rate_axis.set_xlabel("Porcentaje de sesiones con compra")
         figure.suptitle(
-            "ShopPredict AI · Diagnóstico de sesiones",
+            "ShopPredict · Diagnóstico de sesiones",
             fontsize=15,
             fontweight="bold",
         )

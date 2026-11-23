@@ -185,7 +185,7 @@ flowchart TB
 
 ## 7. Aplicación y material de entrega
 
-- [`README.md`](./README.md): portada del paquete e instrucciones de uso.
+- [`../../README.md`](../../README.md): guía operativa de la entrega.
 - [`prototipo_Shoppredict/`](./prototipo_Shoppredict/): aplicación, API opcional,
   dataset, dependencias y lanzadores de Windows.
 - [`ShopPredict Intención de Compra.pptx`](./ShopPredict%20Intención%20de%20Compra.pptx):

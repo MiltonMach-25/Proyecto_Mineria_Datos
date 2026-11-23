@@ -1,4 +1,10 @@
-# ShopPredict AI — Predicción de intención de compra
+# Contexto histórico del proyecto ShopPredict
+
+> Material complementario de etapas previas. Para operación, resultados vigentes
+> y despliegue, consulta `../README.md`, `../AUDITORIA.md` y
+> `../PROMPT_MAESTRO_IA_STUDIO.md`. Las rutas y arquitecturas descritas a
+> continuación reflejan la estructura académica anterior y no sustituyen la guía
+> operativa actual.
 
 ## Proyecto académico de Minería de Datos
 
@@ -39,11 +45,11 @@ El proyecto busca:
 - cruzar información de navegación con datos de marketing,
 - preparar una base unificada para análisis posterior.
 
-## Segunda entrega: ShopPredict
+## Material académico de ShopPredict
 
 El paquete de la sustentación está organizado en
 [`Promp_Maestro/`](./Promp_Maestro/). Abre primero la
-[guía del paquete](./Promp_Maestro/README.md) y el
+[guía del material previo](./Promp_Maestro/GUIA_MATERIAL_PREVIO.md) y el
 [informe EDA actualizado](./Promp_Maestro/Miner%C3%ADa%20De%20Datos%20EDA%20%E2%80%93%20Proyecto%20Shoppredict%20-%20Actualizado.md).
 También se incluyen el informe [Word](./Promp_Maestro/Miner%C3%ADa%20De%20Datos%20EDA%20%E2%80%93%20Proyecto%20Shoppredict%20-%20Actualizado.docx),
 [PDF](./Promp_Maestro/Miner%C3%ADa%20De%20Datos%20EDA%20%E2%80%93%20Proyecto%20Shoppredict%20-%20Actualizado.pdf),
@@ -98,30 +104,28 @@ ProyectoMineriaDeDatos/
 │   ├── evidencias/                       # Informe, métricas, matriz y gráficas
 │   ├── prototipo_Shoppredict/            # Aplicación autocontenida para la demo
 │   │   ├── app_shoppredict_gui.py        # Interfaz gráfica
-│   │   ├── shoppredict_model.py          # Preprocesamiento y modelos
-│   │   ├── api_shoppredict.py            # API REST local opcional
 │   │   ├── descargar_dataset_uci.py      # Descarga opcional desde UCI
 │   │   ├── descargar_dataset_uci.bat
 │   │   ├── online_shoppers_intention.csv # Dataset local del prototipo
 │   │   ├── iniciar_app.bat
-│   │   ├── iniciar_api.bat
 │   │   └── requirements.txt
+│   ├── Entregable_Final_ShopPredict/backend/ # API FastAPI vigente
 │   ├── reproducir_graficos_eda.py        # Código fuente de las figuras del informe
 │   ├── evidencias/eda/                   # Gráficas EDA reproducibles
 │   ├── Minería De Datos EDA – Proyecto Shoppredict - Actualizado.md
 │   ├── Minería De Datos EDA – Proyecto Shoppredict - Actualizado.docx
 │   ├── Minería De Datos EDA – Proyecto Shoppredict - Actualizado.pdf
 │   ├── ShopPredict Intención de Compra.pptx
-│   ├── README.md                         # Guía y portada del paquete
+│   ├── GUIA_MATERIAL_PREVIO.md           # Guía del material académico previo
 │   └── promp_*.md                       # Prompt maestro y módulos de exposición
 ├── capturas_shoppredict/                # Informe, métricas y gráficas para exposición
 ├── Escalamiento_Proyecto/               # Práctica de escalamiento y matrices train/test
 │   ├── escalamiento_proyecto.py
-│   ├── README.md
+│   ├── GUIA_ESCALAMIENTO.md
 │   └── resultados/
 ├── sesion4_transformacion_reduccion/    # Transformación, discretización y PCA
 │   ├── transformar_datos_sesion4.py
-│   ├── README.md
+│   ├── GUIA_SESION4.md
 │   └── resultados/                       # Matrices generadas para modelar
 ├── README.md                            # Documentación del proyecto
 └── .git/                                # Git del repositorio
@@ -195,7 +199,7 @@ python 01_preparacion_y_cruce_de_datos.py
 python proceso_extraccion_limpieza.py
 ```
 
-### Aplicación de demostración ShopPredict AI
+### Aplicación de demostración ShopPredict
 
 Desde la raíz del repositorio, ejecuta:
 
@@ -317,7 +321,7 @@ La carpeta `Promp_Maestro` reúne el informe, las visualizaciones reproducibles,
 la presentación, los prompts y las evidencias. La aplicación, sus dependencias
 y el dataset local están organizados en `prototipo_Shoppredict`. Las
 instrucciones de instalación, inicio de la interfaz y API, equipo y contenido
-están en [`Promp_Maestro/README.md`](./Promp_Maestro/README.md). El informe
+están en [`Promp_Maestro/GUIA_MATERIAL_PREVIO.md`](./Promp_Maestro/GUIA_MATERIAL_PREVIO.md). El informe
 actualizado, con diagramas Mermaid renderizados por GitHub, está en
 [`Promp_Maestro/Minería De Datos EDA – Proyecto Shoppredict - Actualizado.md`](./Promp_Maestro/Miner%C3%ADa%20De%20Datos%20EDA%20%E2%80%93%20Proyecto%20Shoppredict%20-%20Actualizado.md).
 No se genera el
@@ -352,7 +356,7 @@ python sesion4_transformacion_reduccion/transformar_datos_sesion4.py
 Esta etapa compara escaladores, aplica one-hot a las variables categóricas,
 discretiza `Gasto_Historico_USD`, separa `Revenue` como objetivo y genera una
 versión reducida con PCA. La documentación detallada está en
-[`sesion4_transformacion_reduccion/README.md`](sesion4_transformacion_reduccion/README.md).
+[`sesion4_transformacion_reduccion/GUIA_SESION4.md`](sesion4_transformacion_reduccion/GUIA_SESION4.md).
 
 ### Práctica: escalamiento del proyecto
 
@@ -366,7 +370,7 @@ python Escalamiento_Proyecto/escalamiento_proyecto.py
 La práctica escala variables cuantitativas, codifica las categorías nominales,
 conserva las banderas binarias, separa `Revenue` y demuestra PCA después de
 `StandardScaler`. Su guía de ejecución y decisiones está en
-[`Escalamiento_Proyecto/README.md`](Escalamiento_Proyecto/README.md).
+[`Escalamiento_Proyecto/GUIA_ESCALAMIENTO.md`](Escalamiento_Proyecto/GUIA_ESCALAMIENTO.md).
 
 > La ejecución de la versión corregida de `01_preparacion_y_cruce_de_datos.py` usa el archivo local del proyecto para evitar errores por URL no disponible.
 

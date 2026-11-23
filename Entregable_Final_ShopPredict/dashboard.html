@@ -5,40 +5,110 @@
 <title>ShopPredict Dashboard</title>
 <style>
 :root{--ink:#17213b;--bg:#eef2f8;--paper:#fff;--indigo:#4f46e5;--teal:#0d9488;--rose:#db315c;--line:#dde3ef}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI",Arial,sans-serif}.top{height:74px;display:flex;align-items:center;justify-content:space-between;padding:10px 28px;background:#11182d;color:white}.brand{display:flex;align-items:center;gap:10px}.brand img{height:54px}.brand b{display:block}.brand span{color:#aeb7cf;font-size:12px}.wrap{max-width:1180px;margin:auto;padding:24px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.card{background:white;border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:0 12px 30px rgba(23,33,59,.07)}.metric{font-size:34px;font-weight:900}.label{color:#718096;font-size:12px;font-weight:800;text-transform:uppercase}.wide{grid-column:span 2}.status{margin-top:14px;padding:12px;border-left:4px solid #d97706;border-radius:10px;background:#fff8e8}.ok{border-left-color:var(--teal);background:#ecfdf8}.error{border-left-color:var(--rose);background:#fff0f3}canvas{width:100%;height:220px}.bar{height:18px;border-radius:999px;background:#e6eaf2;overflow:hidden}.bar div{height:100%;background:linear-gradient(90deg,var(--indigo),var(--teal))}table{width:100%;border-collapse:collapse}th,td{padding:8px;border-bottom:1px solid var(--line);text-align:left}th{color:#667085;font-size:12px}@media(max-width:900px){.grid{grid-template-columns:1fr 1fr}.wide{grid-column:span 2}}@media(max-width:600px){.grid{grid-template-columns:1fr}.wide{grid-column:span 1}.top{padding:10px 16px}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI",Arial,sans-serif}.top{height:74px;display:flex;align-items:center;justify-content:space-between;padding:10px 28px;background:#11182d;color:white}.brand{display:flex;align-items:center;gap:10px}.brand img{height:54px}.brand b{display:block}.brand span{color:#aeb7cf;font-size:12px}.wrap{max-width:1180px;margin:auto;padding:24px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.card{background:white;border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:0 12px 30px rgba(23,33,59,.07)}.metric{font-size:34px;font-weight:900}.label{color:#718096;font-size:12px;font-weight:800;text-transform:uppercase}.wide{grid-column:span 2}.status{margin-top:14px;padding:12px;border-left:4px solid #d97706;border-radius:10px;background:#fff8e8}.ok{border-left-color:var(--teal);background:#ecfdf8}.error{border-left-color:var(--rose);background:#fff0f3}.empty{border-left-color:#667085;background:#f4f6fa}select,button,input{font:inherit}select,input[type=file]{padding:9px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink)}button{padding:9px 14px;border:0;border-radius:8px;background:var(--indigo);color:#fff;font-weight:800;cursor:pointer}button:disabled{opacity:.6;cursor:wait}.filter-row,.distribution-row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}.filter-row label{display:grid;gap:6px;color:#667085;font-size:12px;font-weight:800}.distribution-row{margin:14px 0}.distribution-row>strong{flex:0 0 120px}.distribution-row .bar{flex:1;min-width:120px;height:18px;border-radius:999px;background:#e6eaf2;overflow:hidden}.bar div{height:100%;background:linear-gradient(90deg,var(--indigo),var(--teal))}.distribution-value{flex:0 0 155px;text-align:right;font-size:13px;font-weight:700}table{width:100%;border-collapse:collapse}th,td{padding:8px;border-bottom:1px solid var(--line);text-align:left}th{color:#667085;font-size:12px}@media(max-width:900px){.grid{grid-template-columns:1fr 1fr}.wide{grid-column:span 2}}@media(max-width:600px){.grid{grid-template-columns:1fr}.wide{grid-column:span 1}.top{padding:10px 16px}.distribution-row>strong,.distribution-value{flex-basis:100%;text-align:left}}
 </style>
 </head>
 <body>
 <header class="top"><div class="brand"><img src="assets/shopredict-logo.png" alt="ShopPredict"><div><b>ShopPredict</b><span>Intención de Compra</span></div></div><a href="index.html" style="color:#fff;text-decoration:none;font-size:13px">Ver presentación</a></header>
 <main class="wrap">
-<div id="status" class="status">Cargando los datos incluidos en el repositorio…</div>
+<div id="status" class="status" aria-live="polite">Conectando con la API…</div>
+<section class="card filter-row" style="margin-top:14px">
+<label for="monthFilter">Mes<select id="monthFilter"><option value="">Todos los meses</option></select></label>
+<label for="visitorFilter">Tipo de visitante<select id="visitorFilter"><option value="">Todos los tipos</option></select></label>
+<button id="reload" type="button">Actualizar</button>
+</section>
 <div class="grid" style="margin-top:14px">
 <div class="card"><div id="total" class="metric">—</div><div class="label">Sesiones sin duplicados</div></div>
 <div class="card"><div id="buy" class="metric">—</div><div class="label">Compras</div></div>
 <div class="card"><div id="rate" class="metric">—</div><div class="label">Conversión</div></div>
 <div class="card"><div id="duration" class="metric">—</div><div class="label">Duración promedio</div></div>
-<div class="card wide"><h3>Comparación de modelos</h3><table id="models"><tr><th>Modelo</th><th>Accuracy</th><th>F1</th></tr></table></div>
-<div class="card wide"><h3>Distribución de datos</h3><canvas id="chart"></canvas></div>
+<div class="card wide"><h3>Comparación de modelos · holdout global</h3><table id="models"></table></div>
+<div class="card wide"><h3>Distribución de sesiones</h3><div id="distribution" aria-live="polite">Esperando datos…</div></div>
+<section class="card wide"><h3>Validar otro archivo CSV</h3><p>La validación es temporal: no reemplaza ni guarda el dataset del proyecto.</p><div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center"><input id="csvFile" type="file" accept=".csv,text/csv"><button id="validateCsv" type="button">Validar CSV</button></div><div id="validationStatus" class="status" aria-live="polite">Selecciona un archivo CSV para revisar su estructura.</div></section>
 </div>
 </main>
 <script>
-async function load(){
-  const status=document.getElementById('status');
-  try{
-    const r=await fetch('/api/stats');
-    if(!r.ok) throw new Error('No fue posible leer los datos del proyecto');
-    const d=await r.json();
-    document.getElementById('total').textContent=(d.total||0).toLocaleString('es-CO');
-    document.getElementById('buy').textContent=(d.purchases||0).toLocaleString('es-CO');
-    document.getElementById('rate').textContent=((d.conversion||0)*100).toFixed(2)+' %';
-    document.getElementById('duration').textContent=Math.round(d.avg_duration||0).toLocaleString('es-CO')+' s';
-    const table=document.getElementById('models');
-    (d.models||[]).forEach(m=>{const tr=document.createElement('tr');[m.name,Number(m.accuracy).toFixed(4),Number(m.f1).toFixed(4)].forEach(value=>{const td=document.createElement('td');td.textContent=value;tr.appendChild(td)});table.appendChild(tr)});
-    status.textContent='Datos leídos del CSV del repositorio; se excluyeron duplicados exactos.';
-    status.className='status ok';
-  }catch(e){status.textContent=e.message;status.className='status error'}
+const status=document.getElementById('status');
+const monthFilter=document.getElementById('monthFilter');
+const visitorFilter=document.getElementById('visitorFilter');
+function addOptions(select,values){
+  values.forEach(value=>{const option=document.createElement('option');option.value=value;option.textContent=value;select.appendChild(option)});
 }
-load();
+async function loadFilters(){
+  const response=await fetch('/schema');
+  if(!response.ok)throw new Error(await errorMessage(response));
+  const schema=await response.json();
+  addOptions(monthFilter,schema.categorical_options.Month||[]);
+  addOptions(visitorFilter,schema.categorical_options.VisitorType||[]);
+}
+function renderModels(models){
+  const table=document.getElementById('models');
+  const header=document.createElement('tr');
+  ['Modelo','Accuracy','F1'].forEach(label=>{const cell=document.createElement('th');cell.textContent=label;header.appendChild(cell)});
+  table.replaceChildren(header);
+  models.forEach(model=>{
+    const row=document.createElement('tr');
+    [model.name,Number(model.accuracy).toFixed(4),Number(model.f1).toFixed(4)].forEach(value=>{const cell=document.createElement('td');cell.textContent=value;row.appendChild(cell)});
+    table.appendChild(row);
+  });
+}
+function renderDistribution(total,purchases){
+  const container=document.getElementById('distribution');
+  container.replaceChildren();
+  if(!total){container.textContent='No hay sesiones para los filtros seleccionados.';return}
+  const values=[['Compras',purchases],['Sin compra',total-purchases]];
+  values.forEach(([label,value])=>{
+    const row=document.createElement('div');row.className='distribution-row';
+    const name=document.createElement('strong');name.textContent=label;
+    const track=document.createElement('div');track.className='bar';
+    const fill=document.createElement('div');fill.style.width=`${value/total*100}%`;track.appendChild(fill);
+    const details=document.createElement('span');details.className='distribution-value';details.textContent=`${value.toLocaleString('es-CO')} · ${(value/total*100).toFixed(2)} %`;
+    row.append(name,track,details);container.appendChild(row);
+  });
+}
+async function load(){
+  try{
+    const params=new URLSearchParams();
+    if(monthFilter.value)params.set('month',monthFilter.value);
+    if(visitorFilter.value)params.set('visitor_type',visitorFilter.value);
+    const query=params.toString();
+    const response=await fetch(`/stats${query?`?${query}`:''}`);
+    if(!response.ok)throw new Error(await errorMessage(response));
+    const data=await response.json();
+    document.getElementById('total').textContent=data.total.toLocaleString('es-CO');
+    document.getElementById('buy').textContent=data.purchases.toLocaleString('es-CO');
+    document.getElementById('rate').textContent=data.conversion===null?'—':`${(data.conversion*100).toFixed(2)} %`;
+    document.getElementById('duration').textContent=data.avg_duration===null?'—':`${Math.round(data.avg_duration).toLocaleString('es-CO')} s`;
+    renderModels(data.models);
+    renderDistribution(data.total,data.purchases);
+    status.textContent=data.total?'Datos del CSV del proyecto, sin duplicados exactos. Las métricas de modelos son del holdout global y no cambian con los filtros.':'No hay sesiones para los filtros seleccionados.';
+    status.className=data.total?'status ok':'status empty';
+  }catch(error){status.textContent=error.message;status.className='status error'}
+}
+async function errorMessage(response){
+  let detail='La solicitud no pudo completarse.';
+  try{const body=await response.json();if(body.detail)detail=body.detail}catch{}
+  return detail;
+}
+document.getElementById('validateCsv').addEventListener('click',async()=>{
+  const file=document.getElementById('csvFile').files[0];
+  const output=document.getElementById('validationStatus');
+  if(!file){output.textContent='Selecciona un archivo CSV.';output.className='status error';return}
+  const form=new FormData();form.append('file',file);
+  output.textContent='Validando archivo…';output.className='status';
+  try{
+    const response=await fetch('/dataset/validate',{method:'POST',body:form});
+    if(!response.ok)throw new Error(await errorMessage(response));
+    const result=await response.json();
+    const issues=result.issues.length?` Observaciones: ${result.issues.join('; ')}`:'';
+    output.textContent=`${result.valid?'CSV válido':'CSV con errores'}: ${result.rows.toLocaleString('es-CO')} filas, ${result.columns} columnas y ${result.duplicates.toLocaleString('es-CO')} duplicados exactos.${issues} No se guardó ni se importó el archivo.`;
+    output.className=result.valid?'status ok':'status error';
+  }catch(error){output.textContent=error.message;output.className='status error'}
+});
+monthFilter.addEventListener('change',load);
+visitorFilter.addEventListener('change',load);
+document.getElementById('reload').addEventListener('click',load);
+(async()=>{try{await loadFilters();await load()}catch(error){status.textContent=error.message;status.className='status error'}})();
 </script>
 </body>
 </html>

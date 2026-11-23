@@ -2,7 +2,7 @@
 
 # Módulo 01
 ## Datos, exploración y limpieza
-### ShopPredict AI · Material de apoyo para la presentación
+### ShopPredict · Material de apoyo para la presentación
 
 </div>
 
@@ -19,7 +19,7 @@
 ## Brief de contenido
 
 Actúa como asesor de exposición académica. Prepara el módulo sobre **dataset,
-exploración y limpieza** de ShopPredict AI. Usa el
+exploración y limpieza** de ShopPredict. Usa el
 [informe EDA actualizado](./Minería%20De%20Datos%20EDA%20%E2%80%93%20Proyecto%20Shoppredict%20-%20Actualizado.md),
 el README y las evidencias de esta carpeta; contrasta los detalles con
 `proyecto.py`, `01_preparacion_y_cruce_de_datos.py` y
@@ -122,6 +122,6 @@ La aplicación funciona offline con el CSV incluido.
 
 ---
 
-**Fuentes del módulo:** informe EDA actualizado, `README.md`, dataset incluido,
+**Fuentes del módulo:** informe EDA actualizado, `../../README.md`, dataset incluido,
 descargador UCI y evidencias del paquete. Para el recorrido completo, vuelve al
 [prompt maestro](./promp_maestro_Shoppredict.md).

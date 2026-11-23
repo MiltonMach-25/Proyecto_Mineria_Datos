@@ -2,7 +2,7 @@
 
 # Módulo 02
 ## Transformación, escalamiento y PCA
-### ShopPredict AI · Material de apoyo para la presentación
+### ShopPredict · Material de apoyo para la presentación
 
 </div>
 
@@ -20,8 +20,8 @@
 
 Actúa como asesor de exposición académica. Prepara un módulo conciso de
 **transformación de datos** y evita repetir la explicación general del dataset.
-Consulta `Escalamiento_Proyecto/README.md` y
-`sesion4_transformacion_reduccion/README.md` cuando estén disponibles.
+Consulta `../Escalamiento_Proyecto/GUIA_ESCALAMIENTO.md` y
+`../sesion4_transformacion_reduccion/GUIA_SESION4.md`.
 
 ### Evidencia técnica
 
