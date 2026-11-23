@@ -1,93 +1,140 @@
-# Prompt maestro para Google AI Studio Build
+# Instrucción para Google AI Studio Build
 
-Copia este prompt en Google AI Studio Build y conecta el repositorio
-`MiltonMach-25/Proyecto_Mineria_Datos`. Trabaja sobre
-`Entregable_Final_ShopPredict/`; no reconstruyas el proyecto desde cero.
+Conecta primero el repositorio `MiltonMach-25/Proyecto_Mineria_Datos`. Después
+copia y ejecuta la instrucción siguiente en Google AI Studio Build. Trabaja
+únicamente sobre `Entregable_Final_ShopPredict/` y conserva los avances actuales.
 
 ---
 
-## PROMPT
+## PROMPT PARA AI STUDIO
 
-Actúa como ingeniero/a senior de frontend y producto de datos. Completa la
-interfaz web de **ShopPredict · Intención de Compra** usando los archivos reales
-de `Entregable_Final_ShopPredict/`. El objetivo es dejar un dashboard profesional,
-usable y preparado para integrarse con el backend FastAPI incluido, sin inventar
-resultados ni conexiones.
+Actúa como ingeniero/a senior full-stack, especialista en aplicaciones de datos
+y despliegues en Google Cloud. Debes **inspeccionar, completar, probar y, si el
+proyecto y los permisos lo permiten, desplegar en producción** ShopPredict:
+Intención de Compra. No te limites a crear una maqueta ni a dar recomendaciones.
 
-### Antes de editar
+El objetivo de la sustentación es demostrar una aplicación funcional con
+**frontend y backend**, que lea y muestre los datos reales del repositorio. La
+presentación HTML no cuenta como despliegue: el despliegue que se debe demostrar
+es la aplicación web y su API funcionando.
 
-1. Lee `README.md` y `AUDITORIA.md`.
-2. Inspecciona `backend/api_shoppredict.py`, `backend/shoppredict_model.py`,
-   `backend/requirements.txt`, `dashboard.html`, `index.html`, el CSV y las
-   métricas en `assets/evidencias/metricas_modelos.csv`.
-3. Trata la auditoría y los resultados guardados como fuente de verdad.
-4. Conserva los archivos académicos y las tres diapositivas de métodos
-   numéricos. La presentación debe seguir teniendo exactamente 12 diapositivas.
+### 1. Revisión antes de editar
 
-### Arquitectura
+1. Confirma el repositorio y la rama conectados, y revisa el estado actual antes
+   de cambiar archivos.
+2. Lee `Entregable_Final_ShopPredict/README.md`,
+   `AUDITORIA.md` y este archivo.
+3. Inspecciona `backend/api_shoppredict.py`,
+   `backend/shoppredict_model.py`, `backend/requirements.txt`, `Dockerfile`,
+   `dashboard.html`, `index.html`, `data/online_shoppers_intention.csv` y
+   `assets/evidencias/metricas_modelos.csv`.
+4. Ejecuta las pruebas existentes antes de editar. Mantén los archivos
+   académicos; no reconstruyas el proyecto desde cero.
 
-- Frontend: genera una interfaz web responsive, en español, que pueda compilarse
-  como archivos estáticos e integrarse con el backend Python.
-- Backend: conserva FastAPI y scikit-learn como fuente de predicciones. No
-  traslades ni reimplementes los modelos en JavaScript.
-- API base: usa `VITE_SHOPPREDICT_API_URL` si se crea un frontend Vite; durante
-  desarrollo permite configurar la URL local `http://127.0.0.1:8080`. Para
-  servir el frontend y la API desde el mismo origen, permite una base vacía.
-- Despliegue: prepara el código para que el resultado estático pueda servirse
-  junto con FastAPI o desde un origen web separado. Documenta cualquier ajuste
-  requerido de `FRONTEND_ORIGINS` en Cloud Run. No afirmes que Cloud Run ya está
-  desplegado.
-- No incorpores plataformas o servicios externos que no estén configurados y
-  probados en el repositorio.
+### 2. Arquitectura requerida
 
-### Funcionalidades requeridas
+- **Frontend:** construye o completa un dashboard moderno, responsive, accesible
+  y en español. Puede ser una aplicación compilada a archivos estáticos.
+- **Backend:** conserva FastAPI y scikit-learn como autoridad para los datos,
+  validaciones y predicciones. No reimplementes los modelos en el navegador.
+- **Datos:** usa el CSV versionado en `data/` como fuente inicial. La API y el
+  frontend deben mostrar estados reales de carga, error y ausencia de datos.
+- **Producción:** intenta integrar frontend y API en un servicio de Cloud Run
+  usando el `Dockerfile` existente. Si la plataforma requiere servicios
+  separados, despliega frontend y API en servicios Cloud Run y configura
+  correctamente `FRONTEND_ORIGINS`.
+- No añadas una base de datos, persistencia de cargas ni servicios externos que
+  no estén configurados y probados. La validación de CSV actual es temporal y no
+  guarda ni importa archivos.
+- No solicites ni escribas contraseñas, claves, tokens o credenciales en el chat,
+  el código ni Git. Si hace falta autorización, indica al usuario dónde
+  configurarla de forma segura en Google Cloud.
 
-1. **Dashboard:** consulta `GET /stats` y muestra registros deduplicados,
-   compras, tasa de conversión, duración promedio y comparación de modelos.
-   Implementa filtros reales por mes y tipo de visitante con los parámetros
-   `month` y `visitor_type`; indica que los KPIs se filtran, pero las métricas de
-   modelos corresponden al holdout global.
-   Construye los gráficos únicamente con respuestas reales de la API o con las
-   evidencias versionadas.
-2. **Estados de interfaz:** presenta carga, error, respuesta vacía y éxito sin
-   sustituir fallos por ceros o datos ficticios. Incluye una acción de reintento.
-3. **Predicción individual:** consulta `GET /schema` para construir el formulario.
-   Usa `categorical_options` y `numeric_ranges`; envía `model` y `features` a
-   `POST /predict`. Presenta la clase, la probabilidad devuelta por la API y su
-   nota de uso académico. Valida entradas y muestra errores HTTP de forma clara.
-4. **Validación de CSV:** permite enviar un archivo a `POST /dataset/validate`.
-   Muestra filas, columnas, duplicados, columnas faltantes, observaciones y el
-   indicador `persisted`. Explica que validar no significa importar, guardar ni
-   reemplazar el dataset.
-5. **Modelos:** presenta como resultados únicamente Árbol de decisión, Random
-   Forest y Regresión logística con las métricas de `GET /metrics`. Etiqueta
-   claramente que corresponden a una única partición estratificada 80/20 con
-   semilla 42.
-6. **Métodos no ejecutados:** Naive Bayes, KNN y clustering solo pueden mostrarse
-   como métodos pendientes/conceptuales. No les asignes porcentajes, etiquetas
-   de clúster, perfiles ni gráficos de resultados sin una ejecución reproducible
-   en el backend y actualización de la auditoría.
-7. **Diseño:** conserva la identidad ShopPredict y el logotipo local
-   `assets/shopredict-logo.png`. Estilo académico, claro, profesional, accesible
-   y adaptable a móvil. No incluyas “AI” como parte del nombre de marca.
-8. **Presentación:** conserva `index.html`, sus activos locales, navegación y las
-   12 diapositivas. No enlaces imágenes externas ni presentes diagramas
-   conceptuales como resultados medidos.
+### 3. Funcionalidades que debe tener el frontend
 
-### Calidad, seguridad y entrega
+1. **Dashboard real:** consulta `GET /stats`; muestra sesiones deduplicadas,
+   compras, conversión, duración promedio y distribución de compras. Implementa
+   filtros funcionales por mes y tipo de visitante (`month` y `visitor_type`).
+   Indica que las métricas de modelos siguen siendo las del holdout global,
+   aunque se filtren los KPI.
+2. **Comparación de modelos:** consume `GET /metrics` y presenta únicamente los
+   resultados verificados de Árbol de decisión, Random Forest y Regresión
+   logística. Explica que son de una partición estratificada 80/20 con semilla
+   42, no una garantía de producción.
+3. **Predicción individual:** consume `GET /schema` para crear el formulario,
+   utiliza `categorical_options` y `numeric_ranges`, y envía el modelo y las
+   variables a `POST /predict`. Presenta la respuesta real, probabilidad y nota
+   de uso académico; muestra errores del backend claramente.
+4. **Validación CSV:** permite enviar un CSV a `POST /dataset/validate` y
+   presenta filas, columnas, duplicados, columnas faltantes, observaciones y
+   `persisted`. Aclara que el archivo no se guarda ni reemplaza el dataset.
+5. **Estados operativos:** incluye carga, reintento, error de conexión, filtros
+   sin resultados y confirmación de conexión al backend mediante `/health`.
+6. **Métodos pendientes:** Naive Bayes, KNN y clustering no tienen métricas
+   finales verificadas. No inventes porcentajes, clústeres, matrices ni gráficos
+   para ellos. Solo preséntalos como pendientes/conceptuales hasta ejecutar una
+   evaluación reproducible en el backend y actualizar la auditoría.
 
-- Nunca incluyas claves, tokens ni credenciales en el código o en Git.
-- No agregues persistencia, base de datos o servicios externos que no estén
-  configurados y probados.
-- Mantén el backend Python como autoridad de predicción; evita lógica de ML
-  duplicada en frontend.
-- Conserva el contrato de endpoints. Si necesitas cambiarlo, actualiza backend,
-  frontend, pruebas, README y auditoría conjuntamente.
-- Añade pruebas enfocadas para la interfaz o los cambios de API y ejecútalas.
-- Comprueba la compilación, navegación, manejo de errores y los endpoints
-  locales cuando el entorno lo permita.
-- Actualiza el único `README.md` de esta entrega solo con instrucciones
-  comprobables. No crees README adicionales.
-- Al finalizar, informa qué archivos modificaste, qué pruebas pasaron y qué
-  pasos de configuración o despliegue siguen pendientes. Distingue claramente
-  entre preparado, probado localmente y desplegado en producción.
+### 4. Requisitos de la sustentación
+
+- Conserva `index.html`, el logotipo local y todos los recursos necesarios para
+  compartir la presentación sin depender de imágenes externas.
+- Mantén **exactamente 12 diapositivas: 9 de minería de datos contando la
+  portada, y 3 de métodos numéricos**.
+- Deben quedar claros el objetivo general, contexto, metodología predictiva,
+  resultados, conclusiones y despliegue.
+- Después de verificar el despliegue, actualiza la diapositiva de conclusiones y
+  despliegue con la arquitectura **real**, la URL pública que comprobaste y una
+  evidencia visual apropiada. No uses la presentación como sustituto del
+  dashboard desplegado.
+- Conserva las tres diapositivas numéricas sobre regresión lineal, interpolación
+  de Lagrange y diferencia entre métodos.
+- No presentes esquemas conceptuales como resultados medidos. No incluyas “AI”
+  en el nombre de marca; el nombre es **ShopPredict · Intención de Compra**.
+
+### 5. Despliegue de producción: obligación y comprobación
+
+1. Construye el frontend y el contenedor desde el código del repositorio.
+2. Despliega la API y el frontend funcional en Google Cloud Run, usando el
+   proyecto y la región que autorice el usuario.
+3. Si la aplicación debe ser pública para que el jurado la vea, configura el
+   acceso únicamente cuando el propietario del proyecto lo autorice y no existan
+   datos privados.
+4. Comprueba desde una URL de producción, no solo en local:
+   - `/health` responde correctamente y reporta los modelos cargados;
+   - `/stats` muestra los datos reales y los filtros modifican los KPI;
+   - `/docs` está disponible para verificar el contrato de la API;
+   - una predicción real llega al backend;
+   - la validación CSV responde sin persistir el archivo;
+   - el frontend carga, muestra datos y maneja errores de API.
+5. Si faltan permisos, proyecto de Google Cloud, facturación o autorización,
+   detalla exactamente cuál paso manual impide desplegar. No informes que está
+   desplegado ni inventes una URL hasta completar y comprobar las pruebas
+   anteriores.
+
+### 6. Calidad, seguridad y ramas
+
+- Conserva los contratos actuales de API; cualquier cambio debe actualizar
+  frontend, backend, pruebas, README y auditoría.
+- Ejecuta las pruebas, compilación y verificaciones disponibles antes de
+  publicar.
+- No sobrescribas ni reescribas el historial de Git. Resume los cambios y
+  publica mediante el flujo de rama o revisión disponible. Mantén `main` y
+  `production` sincronizadas solo después de comprobar que contienen el mismo
+  paquete validado.
+- Deja un solo `README.md` dentro de `Entregable_Final_ShopPredict/`.
+- Actualiza `README.md` y `AUDITORIA.md` con los pasos, limitaciones, resultados
+  de pruebas y URL real del despliegue. No afirmes capacidades no verificadas.
+
+### 7. Informe final obligatorio
+
+Al terminar, informa:
+
+1. URL pública del frontend y URL de la API en producción.
+2. Qué rutas y funcionalidades probaste en producción.
+3. Qué cambios hiciste y en qué rama quedaron.
+4. Qué pruebas locales y de producción pasaron o fallaron.
+5. Qué pasos siguen pendientes, si no pudiste desplegar.
+
+Distingue siempre entre **preparado**, **probado localmente** y
+**desplegado y comprobado en producción**.
