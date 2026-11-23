@@ -11,7 +11,8 @@ Entrega final del proyecto de Minería de Datos y Métodos Numéricos.
 
 - Incluye dataset, presentación HTML autónoma de 12 diapositivas, dashboard y API FastAPI.
 - El backend está preparado para ejecutarse localmente y construirse como imagen Docker para Cloud Run.
-- El frontend de Google AI Studio Build está pendiente de generarse e integrarse; el prompt está en [`PROMPT_MAESTRO_IA_STUDIO.md`](./PROMPT_MAESTRO_IA_STUDIO.md).
+- El frontend React + Vite exportado desde Google AI Studio ya está integrado con la API FastAPI; FastAPI sigue siendo el único backend.
+- La imagen Docker compila el frontend y lo sirve junto con el backend. La presentación se conserva en `/index.html` y el dashboard HTML independiente en `/dashboard.html`.
 - No se afirma que la aplicación esté desplegada públicamente. La publicación en Cloud Run requiere configurar el proyecto y ejecutar los pasos de despliegue.
 - La validación de CSV es temporal y no persiste ni reemplaza datos.
 
@@ -20,27 +21,34 @@ Entrega final del proyecto de Minería de Datos y Métodos Numéricos.
 ```text
 GitHub (código y dataset)
         ↓
-Google AI Studio Build (frontend por generar/integrar)
+Frontend React + Vite (integrado, mismo origen)
         ↓
-FastAPI + scikit-learn (backend incluido)
+FastAPI + scikit-learn (API única)
         ↓
 Google Cloud Run (despliegue pendiente)
 ```
 
-La API también sirve la presentación y el dashboard HTML incluidos. No se requieren
-claves para la ejecución local. No hay integración activa con bases de datos externas.
+El servidor FastAPI sirve el frontend compilado en `/`, la presentación en
+`/index.html`, el dashboard HTML independiente en `/dashboard.html` y la
+documentación de la API en `/docs`. El directorio `proyecto_final_shoppredict/`
+es el export de trabajo local de AI Studio: su copia completa y su backend Node
+duplicado no forman parte del despliegue; el frontend integrado está en
+`frontend/`. No se requieren claves para la ejecución local ni hay bases de
+datos externas.
 
 ## Contenido
 
 | Ruta | Propósito |
 |---|---|
+| `frontend/` | Aplicación React + Vite + Tailwind CSS, compilada por Docker y servida por FastAPI. |
 | `index.html` | Presentación final: 9 diapositivas de minería, incluida la portada, y 3 de métodos numéricos. |
 | `dashboard.html` | KPIs, métricas verificadas y validación temporal de archivos CSV. |
 | `backend/` | API FastAPI, preparación de datos y modelos de clasificación. |
 | `data/online_shoppers_intention.csv` | Dataset de entrada original. |
 | `assets/evidencias/` | EDA, métricas y visualizaciones del proyecto. |
 | `AUDITORIA.md` | Alcance, resultados verificados, limitaciones y pendientes. |
-| `PROMPT_MAESTRO_IA_STUDIO.md` | Instrucción única para generar e integrar el frontend. |
+| `GUION_SUSTENTACION_FINAL.md` | Guion de exposición y recorrido de demostración en vivo. |
+| `PROMPT_MAESTRO_IA_STUDIO.md` | Instrucciones de mantenimiento y despliegue del paquete integrado. |
 | `docs/` | Material académico complementario; las guías internas se conservaron con nombres distintos para evitar README duplicados. |
 
 ## Datos y resultados documentados
@@ -70,7 +78,9 @@ se detallan en la auditoría.
 
 ## Ejecutar localmente en Windows
 
-Desde esta carpeta (`Entregable_Final_ShopPredict`), en PowerShell:
+Abre dos terminales desde esta carpeta (`Entregable_Final_ShopPredict`).
+
+**Terminal 1 — API FastAPI:**
 
 ```powershell
 py -m venv .venv
@@ -79,15 +89,27 @@ python -m pip install -r backend\requirements.txt
 python -m uvicorn backend.api_shoppredict:app --reload --host 127.0.0.1 --port 8080
 ```
 
-Abre:
+**Terminal 2 — frontend de desarrollo:**
 
-- Presentación: `http://127.0.0.1:8080/`
+```powershell
+Push-Location frontend
+npm ci
+npm test
+npm run dev
+```
+
+El servidor Vite en `http://127.0.0.1:5173` reenvía las peticiones API a
+FastAPI en el puerto `8080`. Para probar la versión compilada servida por
+FastAPI, ejecuta `npm run build` desde `frontend/` y abre:
+
+- Dashboard React compilado: `http://127.0.0.1:8080/`
+- Presentación: `http://127.0.0.1:8080/index.html`
 - Dashboard: `http://127.0.0.1:8080/dashboard.html`
 - Documentación interactiva de la API: `http://127.0.0.1:8080/docs`
 
-La API entrena los tres modelos disponibles al iniciar. El arranque puede tardar
+La API entrena los tres modelos disponibles al iniciar; el arranque puede tardar
 unos segundos. Para usar otro CSV como dataset principal, define
-`SHOPPREDICT_DATASET` antes de iniciar el servidor; el archivo debe incluir las
+`SHOPPREDICT_DATASET` antes de iniciar el servidor. El archivo debe incluir las
 18 columnas originales requeridas.
 
 ## API disponible
@@ -97,10 +119,11 @@ unos segundos. Para usar otro CSV como dataset principal, define
 | `GET /health` | Estado del servicio y cantidad de modelos cargados. |
 | `GET /metadata` | Archivo, filas usadas, duplicados y procedencia del dataset. |
 | `GET /schema` | Variables de entrada, tipos y modelos disponibles. |
-| `GET /stats?month=...&visitor_type=...` | KPIs filtrados por mes/visitante; las métricas de modelos siguen siendo globales. |
+| `GET /stats?month=...&visitor_type=...` | KPIs y desgloses de gráficos filtrados por mes/visitante; las métricas de modelos siguen siendo globales. |
 | `GET /metrics` | Métricas guardadas de la partición documentada. |
 | `POST /predict` | Predicción individual con Árbol, Random Forest o Regresión Logística. |
 | `POST /dataset/validate` | Valida un CSV temporal de hasta 10 MB; no lo importa ni persiste. |
+| `GET /dataset/sample-csv` | Descarga una muestra basada en filas reales del dataset; no persiste datos. |
 
 La inferencia de demostración se entrena con las filas etiquetadas disponibles al
 iniciar el servicio. Las métricas mostradas en el dashboard se leen del archivo
@@ -114,6 +137,11 @@ Desde la carpeta de la entrega:
 ```powershell
 python -m unittest discover -s backend\tests -v
 python -m compileall -q backend
+Push-Location frontend
+npm ci
+npm test
+npm run build
+Pop-Location
 ```
 
 ## Preparar el despliegue en Google Cloud Run
@@ -144,7 +172,8 @@ real antes de presentar la URL como funcional.
 
 ## Presentación
 
-Abre `index.html` directamente en un navegador o usa la ruta `/` del backend.
+Abre `index.html` directamente en un navegador o usa la ruta
+`/index.html` del backend. El dashboard principal está en `/`.
 El HTML incluye sus diagramas y gráficos; sus imágenes locales están dentro de
 `assets/`. La portada y ocho diapositivas restantes cubren minería de datos;
 las tres últimas explican regresión lineal, Lagrange y su diferencia. Los
@@ -156,4 +185,5 @@ calculados con ShopPredict.
 - [`AUDITORIA.md`](./AUDITORIA.md): auditoría técnica y académica.
 - [`PROMPT_MAESTRO_IA_STUDIO.md`](./PROMPT_MAESTRO_IA_STUDIO.md): prompt vigente para AI Studio.
 - Las guías y archivos de contexto en `docs/` son material complementario. Este
-  es el único archivo llamado `README.md` dentro de la entrega.
+  es el único `README.md` versionado en el paquete final. La copia original del
+  export está ignorada por Git y no se publica como una segunda entrega.

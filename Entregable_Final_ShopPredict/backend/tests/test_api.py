@@ -9,6 +9,7 @@ from fastapi import HTTPException
 from backend.api_shoppredict import (
     EXPECTED_COLUMNS,
     NUMERIC_COLUMNS,
+    sample_csv,
     stats,
     validate_dataset,
 )
@@ -78,6 +79,69 @@ class ApiTests(unittest.TestCase):
         with self.assertRaises(HTTPException) as error:
             stats(request, month="Unknown")
         self.assertEqual(error.exception.status_code, 422)
+
+    def test_stats_returns_filtered_breakdowns_for_dashboard_charts(self):
+        request = SimpleNamespace(
+            app=SimpleNamespace(
+                state=SimpleNamespace(
+                    features=pd.DataFrame(
+                        {
+                            "ProductRelated_Duration": [10.0, 20.0, 30.0],
+                            "Month": ["Jan", "Feb", "Jan"],
+                            "VisitorType": [
+                                "Returning_Visitor",
+                                "New_Visitor",
+                                "Returning_Visitor",
+                            ],
+                            "Weekend": [False, True, True],
+                            "PageValues": [0.0, 5.0, 10.0],
+                            "BounceRates": [0.1, 0.2, 0.3],
+                            "ExitRates": [0.2, 0.3, 0.4],
+                            "ProductRelated": [1, 2, 3],
+                        }
+                    ),
+                    target=pd.Series([False, True, True]),
+                    model_metrics=[],
+                )
+            )
+        )
+
+        result = stats(request, month="Jan")
+        breakdown = result["breakdown"]
+
+        self.assertEqual(breakdown["by_month"][0]["month"], "Jan")
+        self.assertEqual(breakdown["by_month"][0]["total"], 2)
+        self.assertEqual(breakdown["by_month"][0]["purchases"], 1)
+        self.assertEqual(breakdown["by_visitor"][0]["visitor_type"], "Returning_Visitor")
+        self.assertEqual(breakdown["page_values_signal"]["zero_total"], 1)
+        self.assertEqual(breakdown["page_values_signal"]["positive_total"], 1)
+        self.assertAlmostEqual(breakdown["averages"]["product_related"], 2.0)
+
+    def test_sample_csv_contains_both_real_target_classes(self):
+        features = pd.DataFrame(
+            {
+                column: [0, 1, 2, 3]
+                for column in EXPECTED_COLUMNS
+                if column != "Revenue"
+            }
+        )
+        features["Month"] = ["Jan", "Feb", "Mar", "Apr"]
+        features["VisitorType"] = ["New_Visitor", "Returning_Visitor"] * 2
+        request = SimpleNamespace(
+            app=SimpleNamespace(
+                state=SimpleNamespace(
+                    features=features,
+                    target=pd.Series([True, False, True, False]),
+                )
+            )
+        )
+
+        response = sample_csv(request)
+        sample = pd.read_csv(io.StringIO(response.body.decode("utf-8")))
+
+        self.assertEqual(response.media_type, "text/csv")
+        self.assertEqual(list(sample.columns), EXPECTED_COLUMNS)
+        self.assertEqual(sample["Revenue"].tolist(), [True, True, False, False])
 
     def test_csv_validation_reports_duplicates_without_persisting_upload(self):
         rows = []

@@ -7,3 +7,7 @@ docs/
 tests/
 Promp_Maestro/
 *.zip
+node_modules/
+frontend/node_modules/
+frontend/dist/
+proyecto_final_shoppredict/

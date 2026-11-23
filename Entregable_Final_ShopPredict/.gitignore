@@ -4,3 +4,6 @@
 *.key
 .DS_Store
 __pycache__/
+node_modules/
+/frontend/dist/
+/proyecto_final_shoppredict/
